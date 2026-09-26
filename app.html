@@ -1,0 +1,2093 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kto ide so psom?</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f4f6f8;
+      color: #1f2937;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* SIDEBAR */
+
+    .sidebar {
+      width: 250px;
+      background: #1f2937;
+      color: white;
+      min-height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+    }
+
+    .logo {
+      padding: 25px 20px;
+      font-size: 21px;
+      font-weight: bold;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .logo span {
+      font-size: 28px;
+      margin-right: 8px;
+    }
+
+    .nav {
+      padding: 15px 10px;
+      flex: 1;
+    }
+
+    .nav button {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: #d1d5db;
+      padding: 13px 15px;
+      text-align: left;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 4px;
+      font-size: 15px;
+    }
+
+    .nav button:hover,
+    .nav button.active {
+      background: #374151;
+      color: white;
+    }
+
+    .nav button span {
+      display: inline-block;
+      width: 28px;
+    }
+
+    .sidebar-bottom {
+      padding: 15px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .user-mini {
+      margin-bottom: 12px;
+      font-size: 14px;
+      color: #d1d5db;
+    }
+
+    .logout {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 7px;
+      background: #dc2626;
+      color: white;
+      cursor: pointer;
+    }
+
+    .logout:hover {
+      background: #b91c1c;
+    }
+
+    /* MAIN */
+
+    .main {
+      margin-left: 250px;
+      width: calc(100% - 250px);
+      min-height: 100vh;
+    }
+
+    .topbar {
+      height: 70px;
+      background: white;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 30px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .topbar h1 {
+      font-size: 22px;
+    }
+
+    .top-user {
+      font-size: 14px;
+      color: #6b7280;
+    }
+
+    .content {
+      padding: 30px;
+      max-width: 1400px;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    /* CARDS */
+
+    .welcome {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: white;
+      padding: 30px;
+      border-radius: 15px;
+      margin-bottom: 25px;
+    }
+
+    .welcome h2 {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .welcome p {
+      opacity: 0.9;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 25px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 22px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+    }
+
+    .stat-icon {
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+
+    .stat-number {
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .panel {
+      background: white;
+      border-radius: 12px;
+      padding: 22px;
+      border: 1px solid #e5e7eb;
+      margin-bottom: 20px;
+    }
+
+    .panel h3 {
+      margin-bottom: 18px;
+    }
+
+    /* TABLE */
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 13px 10px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    th {
+      font-size: 13px;
+      color: #6b7280;
+      background: #f9fafb;
+    }
+
+    td {
+      font-size: 14px;
+    }
+
+    /* FORMS */
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 7px;
+      background: white;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: #2563eb;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 7px;
+      padding: 11px 17px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .btn-primary {
+      background: #2563eb;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #1d4ed8;
+    }
+
+    .btn-danger {
+      background: #dc2626;
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    /* DOGS */
+
+    .dog-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .dog-card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .dog-icon {
+      font-size: 42px;
+      margin-bottom: 10px;
+    }
+
+    .dog-card h3 {
+      margin-bottom: 5px;
+    }
+
+    .dog-card p {
+      color: #6b7280;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+
+    /* NOTIFICATIONS */
+
+    .notification {
+      padding: 15px;
+      border-left: 4px solid #2563eb;
+      background: #f9fafb;
+      margin-bottom: 10px;
+      border-radius: 5px;
+    }
+
+    .notification strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .notification small {
+      color: #6b7280;
+    }
+
+    /* MESSAGE */
+
+    .message {
+      display: none;
+      padding: 12px;
+      border-radius: 7px;
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
+
+    .message.success {
+      display: block;
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .message.error {
+      display: block;
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    /* LOADING */
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      font-size: 20px;
+    }
+
+    /* MOBILE */
+
+    .mobile-menu {
+      display: none;
+      border: none;
+      background: transparent;
+      font-size: 25px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 1100px) {
+      .cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .dog-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 800px) {
+      .sidebar {
+        transform: translateX(-100%);
+        transition: 0.25s;
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .main {
+        margin-left: 0;
+        width: 100%;
+      }
+
+      .mobile-menu {
+        display: block;
+      }
+
+      .content {
+        padding: 20px;
+      }
+
+      .grid-2,
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .dog-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 550px) {
+      .cards {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        padding: 0 15px;
+      }
+
+      .top-user {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="loading">
+  🐶 Načítavam aplikáciu...
+</div>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+
+    <div class="logo">
+      <span>🐶</span>
+      Kto ide so psom?
+    </div>
+
+    <nav class="nav">
+
+      <button class="nav-btn active" data-section="home">
+        <span>🏠</span> Domov
+      </button>
+
+      <button class="nav-btn" data-section="calendar">
+        <span>📅</span> Kalendár
+      </button>
+
+      <button class="nav-btn" data-section="dogs">
+        <span>🐕</span> Psy
+      </button>
+
+      <button class="nav-btn" data-section="notifications">
+        <span>🔔</span> Oznámenia
+      </button>
+
+      <button class="nav-btn" data-section="profile">
+        <span>👤</span> Môj profil
+      </button>
+
+      <button class="nav-btn" data-section="substitution">
+        <span>🔄</span> Suplovanie
+      </button>
+
+      <button class="nav-btn" data-section="users" id="usersNav" style="display:none;">
+        <span>👥</span> Používatelia
+      </button>
+
+      <button class="nav-btn" data-section="admin" id="adminNav" style="display:none;">
+        <span>⚙️</span> Admin
+      </button>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+
+      <div class="user-mini">
+        👤 <span id="sidebarUser">Načítavam...</span>
+      </div>
+
+      <button class="logout" id="logoutBtn">
+        Odhlásiť sa
+      </button>
+
+    </div>
+
+  </aside>
+
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <header class="topbar">
+
+      <div style="display:flex;align-items:center;gap:15px;">
+        <button class="mobile-menu" id="mobileMenu">☰</button>
+        <h1 id="pageTitle">Domov</h1>
+      </div>
+
+      <div class="top-user" id="topUser">
+        Načítavam...
+      </div>
+
+    </header>
+
+
+    <div class="content">
+
+      <!-- HOME -->
+      <section class="section active" id="section-home">
+
+        <div class="welcome">
+          <h2>Vitaj v aplikácii 🐶</h2>
+          <p id="welcomeText">
+            Organizovanie venčenia na jednom mieste.
+          </p>
+        </div>
+
+        <div class="cards">
+
+          <div class="card">
+            <div class="stat-icon">🐕</div>
+            <div class="stat-number" id="dogCount">0</div>
+            <div class="stat-label">Psov</div>
+          </div>
+
+          <div class="card">
+            <div class="stat-icon">📅</div>
+            <div class="stat-number" id="walkCount">0</div>
+            <div class="stat-label">Naplánovaných venčení</div>
+          </div>
+
+          <div class="card">
+            <div class="stat-icon">🔄</div>
+            <div class="stat-number" id="substitutionCount">0</div>
+            <div class="stat-label">Suplovaní</div>
+          </div>
+
+          <div class="card">
+            <div class="stat-icon">🔔</div>
+            <div class="stat-number" id="notificationCount">0</div>
+            <div class="stat-label">Oznámení</div>
+          </div>
+
+        </div>
+
+        <div class="grid-2">
+
+          <div class="panel">
+            <h3>📅 Najbližšie venčenia</h3>
+            <div id="homeWalks">
+              <p>Načítavam...</p>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3>🔔 Posledné oznámenia</h3>
+            <div id="homeNotifications">
+              <p>Načítavam...</p>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- CALENDAR -->
+      <section class="section" id="section-calendar">
+
+        <div class="panel">
+
+          <h3>📅 Rozpis venčenia</h3>
+
+          <div class="table-wrapper">
+            <table>
+
+              <thead>
+                <tr>
+                  <th>Dátum</th>
+                  <th>Čas</th>
+                  <th>Pes</th>
+                  <th>Venčí</th>
+                  <th>Stav</th>
+                </tr>
+              </thead>
+
+              <tbody id="walkTable">
+                <tr>
+                  <td colspan="5">Načítavam...</td>
+                </tr>
+              </tbody>
+
+            </table>
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- DOGS -->
+      <section class="section" id="section-dogs">
+
+        <div class="panel">
+          <h3>🐕 Psy</h3>
+          <p style="color:#6b7280;margin-bottom:20px;">
+            Zoznam psov, ktorých je potrebné venčiť.
+          </p>
+
+          <div class="dog-grid" id="dogsContainer">
+            <p>Načítavam...</p>
+          </div>
+        </div>
+
+      </section>
+
+
+      <!-- NOTIFICATIONS -->
+      <section class="section" id="section-notifications">
+
+        <div class="panel">
+
+          <h3>🔔 Oznámenia</h3>
+
+          <div id="notificationsContainer">
+            <p>Načítavam...</p>
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- PROFILE -->
+      <section class="section" id="section-profile">
+
+        <div class="panel">
+
+          <h3>👤 Môj profil</h3>
+
+          <div id="profileMessage" class="message"></div>
+
+          <form id="profileForm">
+
+            <div class="form-grid">
+
+              <div class="form-group">
+                <label>Meno a priezvisko</label>
+                <input type="text" id="profileName">
+              </div>
+
+              <div class="form-group">
+                <label>Používateľské meno</label>
+                <input type="text" id="profileUsername">
+              </div>
+
+              <div class="form-group">
+                <label>E-mail</label>
+                <input type="email" id="profileEmail" disabled>
+              </div>
+
+              <div class="form-group">
+                <label>Rola</label>
+                <input type="text" id="profileRole" disabled>
+              </div>
+
+            </div>
+
+            <button class="btn btn-primary" type="submit">
+              Uložiť zmeny
+            </button>
+
+          </form>
+
+        </div>
+
+      </section>
+
+
+      <!-- SUBSTITUTION -->
+      <section class="section" id="section-substitution">
+
+        <div class="panel">
+
+          <h3>🔄 Suplovanie</h3>
+
+          <p style="color:#6b7280;margin-bottom:20px;">
+            Tu uvidíš prípady, keď niekto nemôže ísť venčiť a je určený náhradník.
+          </p>
+
+          <div id="substitutionMessage" class="message"></div>
+
+          <div class="table-wrapper">
+
+            <table>
+
+              <thead>
+                <tr>
+                  <th>Dátum</th>
+                  <th>Pôvodne</th>
+                  <th>Náhradník</th>
+                  <th>Pes</th>
+                  <th>Dôvod</th>
+                </tr>
+              </thead>
+
+              <tbody id="substitutionTable">
+                <tr>
+                  <td colspan="5">Načítavam...</td>
+                </tr>
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- USERS -->
+      <section class="section" id="section-users">
+
+        <div class="panel">
+
+          <h3>👥 Používatelia</h3>
+
+          <div class="table-wrapper">
+
+            <table>
+
+              <thead>
+                <tr>
+                  <th>Meno</th>
+                  <th>Používateľské meno</th>
+                  <th>E-mail</th>
+                  <th>Rola</th>
+                </tr>
+              </thead>
+
+              <tbody id="usersTable">
+                <tr>
+                  <td colspan="4">Načítavam...</td>
+                </tr>
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ADMIN -->
+      <section class="section" id="section-admin">
+
+        <div class="panel">
+
+          <h3>⚙️ Administrácia</h3>
+
+          <div id="adminMessage" class="message"></div>
+
+          <h4 style="margin:20px 0 15px;">
+            Pridať psa
+          </h4>
+
+          <form id="addDogForm">
+
+            <div class="form-grid">
+
+              <div class="form-group">
+                <label>Meno psa</label>
+                <input type="text" id="dogName" required>
+              </div>
+
+              <div class="form-group">
+                <label>Plemeno</label>
+                <input type="text" id="dogBreed">
+              </div>
+
+              <div class="form-group full">
+                <label>Poznámka</label>
+                <textarea id="dogNote"></textarea>
+              </div>
+
+            </div>
+
+            <button class="btn btn-primary" type="submit">
+              + Pridať psa
+            </button>
+
+          </form>
+
+        </div>
+
+
+        <div class="panel">
+
+          <h3>➕ Pridať venčenie</h3>
+
+          <form id="addWalkForm">
+
+            <div class="form-grid">
+
+              <div class="form-group">
+                <label>Dátum</label>
+                <input type="date" id="walkDate" required>
+              </div>
+
+              <div class="form-group">
+                <label>Čas</label>
+                <input type="time" id="walkTime" required>
+              </div>
+
+              <div class="form-group">
+                <label>Pes</label>
+                <select id="walkDog" required>
+                  <option value="">Vyber psa</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Venčí</label>
+                <select id="walkUser" required>
+                  <option value="">Vyber používateľa</option>
+                </select>
+              </div>
+
+            </div>
+
+            <button class="btn btn-primary" type="submit">
+              + Pridať venčenie
+            </button>
+
+          </form>
+
+        </div>
+
+
+        <div class="panel">
+
+          <h3>🔄 Pridať suplovanie</h3>
+
+          <form id="addSubstitutionForm">
+
+            <div class="form-grid">
+
+              <div class="form-group">
+                <label>Dátum</label>
+                <input type="date" id="subDate" required>
+              </div>
+
+              <div class="form-group">
+                <label>Pes</label>
+                <select id="subDog" required>
+                  <option value="">Vyber psa</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Pôvodne mal venčiť</label>
+                <select id="subOriginalUser" required>
+                  <option value="">Vyber používateľa</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Náhradník</label>
+                <select id="subReplacementUser" required>
+                  <option value="">Vyber náhradníka</option>
+                </select>
+              </div>
+
+              <div class="form-group full">
+                <label>Dôvod</label>
+                <textarea id="subReason" placeholder="Napr. choroba, dovolenka..."></textarea>
+              </div>
+
+            </div>
+
+            <button class="btn btn-primary" type="submit">
+              + Pridať suplovanie
+            </button>
+
+          </form>
+
+        </div>
+
+
+        <div class="panel">
+
+          <h3>📢 Pridať oznámenie</h3>
+
+          <form id="addNotificationForm">
+
+            <div class="form-group">
+              <label>Nadpis</label>
+              <input type="text" id="notificationTitle" required>
+            </div>
+
+            <div class="form-group">
+              <label>Text oznámenia</label>
+              <textarea id="notificationText" required></textarea>
+            </div>
+
+            <button class="btn btn-primary" type="submit">
+              + Pridať oznámenie
+            </button>
+
+          </form>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  </main>
+
+</div>
+
+
+<script type="module">
+
+  /* =========================================================
+     FIREBASE
+     ========================================================= */
+
+  import { initializeApp }
+    from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+
+  import {
+    getDatabase,
+    ref,
+    onValue,
+    push,
+    set,
+    update
+  } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBiXQt7bHPI15wp4krGq-GwPz7BfsSvaEE",
+    authDomain: "ktoidezopsom.firebaseapp.com",
+    databaseURL: "https://ktoidezopsom-default-rtdb.firebaseio.com",
+    projectId: "ktoidezopsom",
+    storageBucket: "ktoidezopsom.firebasestorage.app",
+    messagingSenderId: "354613832067",
+    appId: "1:354613832067:web:ddf12b03ed6b4a61d8aeb6",
+    measurementId: "G-Z8YC2L3RK7"
+  };
+
+
+  const app = initializeApp(firebaseConfig);
+
+  const auth = getAuth(app);
+
+  const db = getDatabase(app);
+
+
+  /* =========================================================
+     GLOBAL DATA
+     ========================================================= */
+
+  let currentUser = null;
+  let currentProfile = null;
+
+  let dogs = {};
+  let users = {};
+  let walks = {};
+  let substitutions = {};
+  let notifications = {};
+
+
+  /* =========================================================
+     POMOCNÉ FUNKCIE
+     ========================================================= */
+
+  function escapeHTML(value) {
+    if (value === undefined || value === null) return "";
+
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+
+  function showMessage(elementId, text, type = "success") {
+
+    const element = document.getElementById(elementId);
+
+    element.textContent = text;
+    element.className = "message " + type;
+
+    setTimeout(() => {
+      element.className = "message";
+    }, 4000);
+  }
+
+
+  function getUserName(uid) {
+
+    if (users[uid]) {
+      return users[uid].name ||
+             users[uid].username ||
+             users[uid].email ||
+             "Používateľ";
+    }
+
+    if (uid === currentUser?.uid) {
+      return currentProfile?.name ||
+             currentProfile?.username ||
+             currentUser?.email ||
+             "Používateľ";
+    }
+
+    return "Neznámy používateľ";
+  }
+
+
+  function getDogName(id) {
+
+    return dogs[id]?.name || "Neznámy pes";
+  }
+
+
+  /* =========================================================
+     NAVIGÁCIA
+     ========================================================= */
+
+  const titles = {
+    home: "Domov",
+    calendar: "Kalendár",
+    dogs: "Psy",
+    notifications: "Oznámenia",
+    profile: "Môj profil",
+    substitution: "Suplovanie",
+    users: "Používatelia",
+    admin: "Administrácia"
+  };
+
+
+  document.querySelectorAll(".nav-btn").forEach(button => {
+
+    button.addEventListener("click", () => {
+
+      const sectionName = button.dataset.section;
+
+      document.querySelectorAll(".nav-btn")
+        .forEach(btn => btn.classList.remove("active"));
+
+      document.querySelectorAll(".section")
+        .forEach(section => section.classList.remove("active"));
+
+      button.classList.add("active");
+
+      document
+        .getElementById("section-" + sectionName)
+        .classList.add("active");
+
+      document.getElementById("pageTitle").textContent =
+        titles[sectionName] || "Aplikácia";
+
+      document.getElementById("sidebar")
+        .classList.remove("open");
+
+    });
+
+  });
+
+
+  document.getElementById("mobileMenu")
+    .addEventListener("click", () => {
+
+      document.getElementById("sidebar")
+        .classList.toggle("open");
+
+    });
+
+
+  /* =========================================================
+     AUTHENTICATION
+     ========================================================= */
+
+  onAuthStateChanged(auth, async user => {
+
+    if (!user) {
+
+      window.location.href = "login.html";
+      return;
+
+    }
+
+    currentUser = user;
+
+    document.getElementById("profileEmail").value =
+      user.email || "";
+
+    await loadProfile(user.uid);
+
+    setupRealtimeListeners();
+
+    document.getElementById("loading").style.display = "none";
+
+  });
+
+
+  /* =========================================================
+     PROFIL POUŽÍVATEĽA
+     ========================================================= */
+
+  async function loadProfile(uid) {
+
+    const userRef = ref(db, "users/" + uid);
+
+    onValue(userRef, snapshot => {
+
+      currentProfile = snapshot.val() || {};
+
+      const name =
+        currentProfile.name ||
+        currentProfile.username ||
+        currentUser.email ||
+        "Používateľ";
+
+      const role =
+        currentProfile.role ||
+        "user";
+
+
+      document.getElementById("sidebarUser")
+        .textContent = name;
+
+      document.getElementById("topUser")
+        .textContent = name;
+
+
+      document.getElementById("welcomeText")
+        .textContent =
+        "Vitaj, " + name + "! Tu nájdeš všetko potrebné na organizovanie venčenia.";
+
+
+      document.getElementById("profileName").value =
+        currentProfile.name || "";
+
+      document.getElementById("profileUsername").value =
+        currentProfile.username || "";
+
+      document.getElementById("profileRole").value =
+        role;
+
+
+      if (role === "admin") {
+
+        document.getElementById("adminNav").style.display = "block";
+        document.getElementById("usersNav").style.display = "block";
+
+      } else {
+
+        document.getElementById("adminNav").style.display = "none";
+        document.getElementById("usersNav").style.display = "none";
+
+      }
+
+    });
+
+  }
+
+
+  /* =========================================================
+     REALTIME DATABASE LISTENERS
+     ========================================================= */
+
+  function setupRealtimeListeners() {
+
+    onValue(ref(db, "users"), snapshot => {
+
+      users = snapshot.val() || {};
+
+      renderUsers();
+      fillUserSelects();
+
+    });
+
+
+    onValue(ref(db, "dogs"), snapshot => {
+
+      dogs = snapshot.val() || {};
+
+      document.getElementById("dogCount").textContent =
+        Object.keys(dogs).length;
+
+      renderDogs();
+      renderWalks();
+      fillDogSelects();
+
+    });
+
+
+    onValue(ref(db, "walks"), snapshot => {
+
+      walks = snapshot.val() || {};
+
+      document.getElementById("walkCount").textContent =
+        Object.keys(walks).length;
+
+      renderWalks();
+      renderHomeWalks();
+
+    });
+
+
+    onValue(ref(db, "substitutions"), snapshot => {
+
+      substitutions = snapshot.val() || {};
+
+      document.getElementById("substitutionCount").textContent =
+        Object.keys(substitutions).length;
+
+      renderSubstitutions();
+
+    });
+
+
+    onValue(ref(db, "notifications"), snapshot => {
+
+      notifications = snapshot.val() || {};
+
+      document.getElementById("notificationCount").textContent =
+        Object.keys(notifications).length;
+
+      renderNotifications();
+      renderHomeNotifications();
+
+    });
+
+  }
+
+
+  /* =========================================================
+     PSY
+     ========================================================= */
+
+  function renderDogs() {
+
+    const container =
+      document.getElementById("dogsContainer");
+
+    const entries = Object.entries(dogs);
+
+    if (!entries.length) {
+
+      container.innerHTML =
+        "<p>Zatiaľ nie sú pridané žiadne psy.</p>";
+
+      return;
+
+    }
+
+
+    container.innerHTML = entries.map(([id, dog]) => {
+
+      return `
+        <div class="dog-card">
+
+          <div class="dog-icon">🐕</div>
+
+          <h3>${escapeHTML(dog.name)}</h3>
+
+          <p>
+            <strong>Plemeno:</strong>
+            ${escapeHTML(dog.breed || "Neuvedené")}
+          </p>
+
+          ${
+            dog.note
+            ? `<p>${escapeHTML(dog.note)}</p>`
+            : ""
+          }
+
+        </div>
+      `;
+
+    }).join("");
+
+  }
+
+
+  /* =========================================================
+     VENČENIE
+     ========================================================= */
+
+  function renderWalks() {
+
+    const table =
+      document.getElementById("walkTable");
+
+    const entries =
+      Object.entries(walks)
+        .sort((a, b) =>
+          `${a[1].date || ""} ${a[1].time || ""}`
+          .localeCompare(
+            `${b[1].date || ""} ${b[1].time || ""}`
+          )
+        );
+
+
+    if (!entries.length) {
+
+      table.innerHTML = `
+        <tr>
+          <td colspan="5">
+            Zatiaľ nie je naplánované žiadne venčenie.
+          </td>
+        </tr>
+      `;
+
+      return;
+
+    }
+
+
+    table.innerHTML = entries.map(([id, walk]) => {
+
+      return `
+        <tr>
+
+          <td>${escapeHTML(walk.date || "")}</td>
+
+          <td>${escapeHTML(walk.time || "")}</td>
+
+          <td>${escapeHTML(getDogName(walk.dogId))}</td>
+
+          <td>${escapeHTML(getUserName(walk.userId))}</td>
+
+          <td>
+            ${escapeHTML(walk.status || "Naplánované")}
+          </td>
+
+        </tr>
+      `;
+
+    }).join("");
+
+  }
+
+
+  function renderHomeWalks() {
+
+    const container =
+      document.getElementById("homeWalks");
+
+    const entries =
+      Object.entries(walks)
+        .sort((a, b) =>
+          `${a[1].date || ""} ${a[1].time || ""}`
+          .localeCompare(
+            `${b[1].date || ""} ${b[1].time || ""}`
+          )
+        )
+        .slice(0, 5);
+
+
+    if (!entries.length) {
+
+      container.innerHTML =
+        "<p>Zatiaľ nie sú naplánované žiadne venčenia.</p>";
+
+      return;
+
+    }
+
+
+    container.innerHTML = entries.map(([id, walk]) => {
+
+      return `
+        <div style="
+          padding:12px 0;
+          border-bottom:1px solid #eee;
+        ">
+
+          <strong>
+            ${escapeHTML(walk.date || "")}
+            ${escapeHTML(walk.time || "")}
+          </strong>
+
+          <div style="color:#6b7280;margin-top:4px;">
+            🐕 ${escapeHTML(getDogName(walk.dogId))}
+            · 👤 ${escapeHTML(getUserName(walk.userId))}
+          </div>
+
+        </div>
+      `;
+
+    }).join("");
+
+  }
+
+
+  /* =========================================================
+     OZNÁMENIA
+     ========================================================= */
+
+  function renderNotifications() {
+
+    const container =
+      document.getElementById("notificationsContainer");
+
+    const entries =
+      Object.entries(notifications)
+        .reverse();
+
+
+    if (!entries.length) {
+
+      container.innerHTML =
+        "<p>Zatiaľ nie sú žiadne oznámenia.</p>";
+
+      return;
+
+    }
+
+
+    container.innerHTML = entries.map(([id, notification]) => {
+
+      return `
+        <div class="notification">
+
+          <strong>
+            ${escapeHTML(notification.title || "Oznámenie")}
+          </strong>
+
+          <div>
+            ${escapeHTML(notification.text || "")}
+          </div>
+
+          ${
+            notification.date
+            ? `<small>${escapeHTML(notification.date)}</small>`
+            : ""
+          }
+
+        </div>
+      `;
+
+    }).join("");
+
+  }
+
+
+  function renderHomeNotifications() {
+
+    const container =
+      document.getElementById("homeNotifications");
+
+    const entries =
+      Object.entries(notifications)
+        .reverse()
+        .slice(0, 4);
+
+
+    if (!entries.length) {
+
+      container.innerHTML =
+        "<p>Zatiaľ nie sú žiadne oznámenia.</p>";
+
+      return;
+
+    }
+
+
+    container.innerHTML = entries.map(([id, notification]) => {
+
+      return `
+        <div style="
+          padding:12px 0;
+          border-bottom:1px solid #eee;
+        ">
+
+          <strong>
+            ${escapeHTML(notification.title || "Oznámenie")}
+          </strong>
+
+          <div style="
+            color:#6b7280;
+            margin-top:4px;
+          ">
+            ${escapeHTML(notification.text || "")}
+          </div>
+
+        </div>
+      `;
+
+    }).join("");
+
+  }
+
+
+  /* =========================================================
+     SUPLOVANIE
+     ========================================================= */
+
+  function renderSubstitutions() {
+
+    const table =
+      document.getElementById("substitutionTable");
+
+    const entries =
+      Object.entries(substitutions);
+
+
+    if (!entries.length) {
+
+      table.innerHTML = `
+        <tr>
+          <td colspan="5">
+            Zatiaľ nie je evidované žiadne suplovanie.
+          </td>
+        </tr>
+      `;
+
+      return;
+
+    }
+
+
+    table.innerHTML = entries.map(([id, item]) => {
+
+      return `
+        <tr>
+
+          <td>${escapeHTML(item.date || "")}</td>
+
+          <td>${escapeHTML(getUserName(item.originalUserId))}</td>
+
+          <td>${escapeHTML(getUserName(item.replacementUserId))}</td>
+
+          <td>${escapeHTML(getDogName(item.dogId))}</td>
+
+          <td>${escapeHTML(item.reason || "")}</td>
+
+        </tr>
+      `;
+
+    }).join("");
+
+  }
+
+
+  /* =========================================================
+     USERS
+     ========================================================= */
+
+  function renderUsers() {
+
+    const table =
+      document.getElementById("usersTable");
+
+    const entries =
+      Object.entries(users);
+
+
+    if (!entries.length) {
+
+      table.innerHTML = `
+        <tr>
+          <td colspan="4">
+            Zatiaľ nie sú registrovaní používatelia.
+          </td>
+        </tr>
+      `;
+
+      return;
+
+    }
+
+
+    table.innerHTML = entries.map(([uid, user]) => {
+
+      return `
+        <tr>
+
+          <td>
+            ${escapeHTML(user.name || "")}
+          </td>
+
+          <td>
+            ${escapeHTML(user.username || "")}
+          </td>
+
+          <td>
+            ${escapeHTML(user.email || "")}
+          </td>
+
+          <td>
+            ${escapeHTML(user.role || "user")}
+          </td>
+
+        </tr>
+      `;
+
+    }).join("");
+
+  }
+
+
+  /* =========================================================
+     SELECTY
+     ========================================================= */
+
+  function fillDogSelects() {
+
+    const selects = [
+      document.getElementById("walkDog"),
+      document.getElementById("subDog")
+    ];
+
+
+    selects.forEach(select => {
+
+      if (!select) return;
+
+      const currentValue = select.value;
+
+      select.innerHTML =
+        `<option value="">Vyber psa</option>`;
+
+
+      Object.entries(dogs).forEach(([id, dog]) => {
+
+        const option =
+          document.createElement("option");
+
+        option.value = id;
+        option.textContent = dog.name || "Pes";
+
+        select.appendChild(option);
+
+      });
+
+
+      select.value = currentValue;
+
+    });
+
+  }
+
+
+  function fillUserSelects() {
+
+    const selects = [
+      document.getElementById("walkUser"),
+      document.getElementById("subOriginalUser"),
+      document.getElementById("subReplacementUser")
+    ];
+
+
+    selects.forEach(select => {
+
+      if (!select) return;
+
+      const currentValue = select.value;
+
+      select.innerHTML =
+        `<option value="">Vyber používateľa</option>`;
+
+
+      Object.entries(users).forEach(([id, user]) => {
+
+        const option =
+          document.createElement("option");
+
+        option.value = id;
+
+        option.textContent =
+          user.name ||
+          user.username ||
+          user.email ||
+          "Používateľ";
+
+        select.appendChild(option);
+
+      });
+
+
+      select.value = currentValue;
+
+    });
+
+  }
+
+
+  /* =========================================================
+     PROFIL - ULOŽENIE
+     ========================================================= */
+
+  document.getElementById("profileForm")
+    .addEventListener("submit", async event => {
+
+      event.preventDefault();
+
+      if (!currentUser) return;
+
+
+      try {
+
+        await update(
+          ref(db, "users/" + currentUser.uid),
+          {
+            name:
+              document.getElementById("profileName").value.trim(),
+
+            username:
+              document.getElementById("profileUsername").value.trim()
+          }
+        );
+
+
+        showMessage(
+          "profileMessage",
+          "Profil bol úspešne uložený."
+        );
+
+      } catch (error) {
+
+        console.error(error);
+
+        showMessage(
+          "profileMessage",
+          "Profil sa nepodarilo uložiť.",
+          "error"
+        );
+
+      }
+
+    });
+
+
+  /* =========================================================
+     ADMIN - PRIDAŤ PSA
+     ========================================================= */
+
+  document.getElementById("addDogForm")
+    .addEventListener("submit", async event => {
+
+      event.preventDefault();
+
+      if (currentProfile?.role !== "admin") {
+        return;
+      }
+
+
+      try {
+
+        const newDogRef =
+          push(ref(db, "dogs"));
+
+        await set(newDogRef, {
+
+          name:
+            document.getElementById("dogName").value.trim(),
+
+          breed:
+            document.getElementById("dogBreed").value.trim(),
+
+          note:
+            document.getElementById("dogNote").value.trim(),
+
+          createdAt:
+            new Date().toISOString(),
+
+          createdBy:
+            currentUser.uid
+
+        });
+
+
+        event.target.reset();
+
+        showMessage(
+          "adminMessage",
+          "Pes bol úspešne pridaný."
+        );
+
+      } catch (error) {
+
+        console.error(error);
+
+        showMessage(
+          "adminMessage",
+          "Psa sa nepodarilo pridať.",
+          "error"
+        );
+
+      }
+
+    });
+
+
+  /* =========================================================
+     ADMIN - PRIDAŤ VENČENIE
+     ========================================================= */
+
+  document.getElementById("addWalkForm")
+    .addEventListener("submit", async event => {
+
+      event.preventDefault();
+
+      if (currentProfile?.role !== "admin") {
+        return;
+      }
+
+
+      try {
+
+        const newWalkRef =
+          push(ref(db, "walks"));
+
+
+        await set(newWalkRef, {
+
+          date:
+            document.getElementById("walkDate").value,
+
+          time:
+            document.getElementById("walkTime").value,
+
+          dogId:
+            document.getElementById("walkDog").value,
+
+          userId:
+            document.getElementById("walkUser").value,
+
+          status:
+            "Naplánované",
+
+          createdAt:
+            new Date().toISOString(),
+
+          createdBy:
+            currentUser.uid
+
+        });
+
+
+        event.target.reset();
+
+        showMessage(
+          "adminMessage",
+          "Venčenie bolo úspešne pridané."
+        );
+
+      } catch (error) {
+
+        console.error(error);
+
+        showMessage(
+          "adminMessage",
+          "Venčenie sa nepodarilo pridať.",
+          "error"
+        );
+
+      }
+
+    });
+
+
+  /* =========================================================
+     ADMIN - PRIDAŤ SUPLOVANIE
+     ========================================================= */
+
+  document.getElementById("addSubstitutionForm")
+    .addEventListener("submit", async event => {
+
+      event.preventDefault();
+
+      if (currentProfile?.role !== "admin") {
+        return;
+      }
+
+
+      try {
+
+        const newSubRef =
+          push(ref(db, "substitutions"));
+
+
+        await set(newSubRef, {
+
+          date:
+            document.getElementById("subDate").value,
+
+          dogId:
+            document.getElementById("subDog").value,
+
+          originalUserId:
+            document.getElementById("subOriginalUser").value,
+
+          replacementUserId:
+            document.getElementById("subReplacementUser").value,
+
+          reason:
+            document.getElementById("subReason").value.trim(),
+
+          createdAt:
+            new Date().toISOString(),
+
+          createdBy:
+            currentUser.uid
+
+        });
+
+
+        event.target.reset();
+
+        showMessage(
+          "adminMessage",
+          "Suplovanie bolo úspešne pridané."
+        );
+
+      } catch (error) {
+
+        console.error(error);
+
+        showMessage(
+          "adminMessage",
+          "Suplovanie sa nepodarilo pridať.",
+          "error"
+        );
+
+      }
+
+    });
+
+
+  /* =========================================================
+     ADMIN - OZNÁMENIE
+     ========================================================= */
+
+  document.getElementById("addNotificationForm")
+    .addEventListener("submit", async event => {
+
+      event.preventDefault();
+
+      if (currentProfile?.role !== "admin") {
+        return;
+      }
+
+
+      try {
+
+        const newNotificationRef =
+          push(ref(db, "notifications"));
+
+
+        await set(newNotificationRef, {
+
+          title:
+            document.getElementById("notificationTitle").value.trim(),
+
+          text:
+            document.getElementById("notificationText").value.trim(),
+
+          date:
+            new Date().toLocaleDateString("sk-SK"),
+
+          createdAt:
+            new Date().toISOString(),
+
+          createdBy:
+            currentUser.uid
+
+        });
+
+
+        event.target.reset();
+
+        showMessage(
+          "adminMessage",
+          "Oznámenie bolo úspešne pridané."
+        );
+
+      } catch (error) {
+
+        console.error(error);
+
+        showMessage(
+          "adminMessage",
+          "Oznámenie sa nepodarilo pridať.",
+          "error"
+        );
+
+      }
+
+    });
+
+
+  /* =========================================================
+     ODHLÁSENIE
+     ========================================================= */
+
+  document.getElementById("logoutBtn")
+    .addEventListener("click", async () => {
+
+      try {
+
+        await signOut(auth);
+
+        window.location.href = "login.html";
+
+      } catch (error) {
+
+        console.error(error);
+
+        alert("Odhlásenie sa nepodarilo.");
+
+      }
+
+    });
+
+</script>
+
+</body>
+</html>
