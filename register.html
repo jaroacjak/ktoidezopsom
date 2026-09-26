@@ -105,21 +105,6 @@
         cursor: pointer;
     }
 
-    .terms {
-        display: flex;
-        align-items: flex-start;
-        gap: 9px;
-        margin: 18px 0;
-        font-size: 13px;
-        color: #64748b;
-        line-height: 1.4;
-    }
-
-    .terms input {
-        width: auto;
-        margin-top: 3px;
-    }
-
     .register-button {
         width: 100%;
         padding: 14px;
@@ -226,6 +211,7 @@
     <form id="registerForm">
 
         <div class="form-group">
+
             <label for="name">
                 Meno a priezvisko
             </label>
@@ -237,9 +223,11 @@
                 autocomplete="name"
                 required
             >
+
         </div>
 
         <div class="form-group">
+
             <label for="username">
                 Používateľské meno
             </label>
@@ -252,9 +240,11 @@
                 minlength="3"
                 required
             >
+
         </div>
 
         <div class="form-group">
+
             <label for="email">
                 E-mail
             </label>
@@ -266,9 +256,11 @@
                 autocomplete="email"
                 required
             >
+
         </div>
 
         <div class="form-group">
+
             <label for="password">
                 Heslo
             </label>
@@ -294,6 +286,7 @@
                 </button>
 
             </div>
+
         </div>
 
         <div class="form-group">
@@ -326,20 +319,6 @@
 
         </div>
 
-        <label class="terms">
-
-            <input
-                type="checkbox"
-                id="terms"
-                required
-            >
-
-            <span>
-                Súhlasím s podmienkami používania aplikácie.
-            </span>
-
-        </label>
-
         <button
             type="submit"
             class="register-button"
@@ -371,15 +350,18 @@
 
 </div><script>
     function togglePassword(id) {
+
         const input = document.getElementById(id);
 
         if (!input) {
             return;
         }
 
-        input.type = input.type === "password"
-            ? "text"
-            : "password";
+        if (input.type === "password") {
+            input.type = "text";
+        } else {
+            input.type = "password";
+        }
     }
 </script><script type="module" src="auth.js"></script></body>
 </html>
