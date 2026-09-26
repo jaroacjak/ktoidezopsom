@@ -1,663 +1,717 @@
-/* =========================================================
-   FIREBASE AUTH
-   auth.js
-   ========================================================= */
-
-import { initializeApp }
-  from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 
 import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  sendPasswordResetEmail,
-  signOut,
-  onAuthStateChanged
+getAuth,
+createUserWithEmailAndPassword,
+signInWithEmailAndPassword,
+sendPasswordResetEmail,
+signOut,
+onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
 import {
-  getDatabase,
-  ref,
-  set,
-  get,
-  update
+getDatabase,
+ref,
+set,
+get,
+update
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
-
-/* =========================================================
-   FIREBASE CONFIG
-   ========================================================= */
+// ======================================================
+// FIREBASE KONFIGURÁCIA
+// ======================================================
 
 const firebaseConfig = {
-
-  apiKey:
-    "AIzaSyBiXQt7bHPI15wp4krGq-WgPz7BfsSvaEE",
-
-  authDomain:
-    "ktoidezopsom.firebaseapp.com",
-
-  databaseURL:
-    "https://ktoidezopsom-default-rtdb.firebaseio.com",
-
-  projectId:
-    "ktoidezopsom",
-
-  storageBucket:
-    "ktoidezopsom.firebasestorage.app",
-
-  messagingSenderId:
-    "354613832067",
-
-  appId:
-    "1:354613832067:web:ddf12b03ed6b4a61d8aeb6",
-
-  measurementId:
-    "G-Z8YC2L3RK7"
+apiKey: "AIzaSyBiXQt7bHPI15wp4krGq-GwPz7BfsSvaEE",
+authDomain: "ktoidezopsom.firebaseapp.com",
+databaseURL: "https://ktoidezopsom-default-rtdb.firebaseio.com",
+projectId: "ktoidezopsom",
+storageBucket: "ktoidezopsom.firebasestorage.app",
+messagingSenderId: "354613832067",
+appId: "1:354613832067:web:ddf12b03ed6b4a61d8aeb6",
+measurementId: "G-Z8YC2L3RK7"
 };
 
+// ======================================================
+// SPUSTENIE FIREBASE
+// ======================================================
 
-const app =
-  initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
 
-const auth =
-  getAuth(app);
+const auth = getAuth(app);
 
-const db =
-  getDatabase(app);
+const db = getDatabase(app);
 
-
-/* =========================================================
-   POMOCNÉ FUNKCIE
-   ========================================================= */
+// ======================================================
+// PRÁCA SO SPRÁVAMI
+// ======================================================
 
 function showError(message) {
 
-  const errorElement =
-    document.getElementById("errorMessage");
+const error = document.getElementById("errorMessage");
 
-  if (errorElement) {
+const success = document.getElementById("successMessage");
 
-    errorElement.textContent = message;
+if (success) {
+    success.style.display = "none";
+}
 
-    errorElement.style.display = "block";
+if (error) {
 
-  } else {
+    error.textContent = message;
+
+    error.style.display = "block";
+
+} else {
 
     alert(message);
 
-  }
-
 }
 
+}
 
 function showSuccess(message) {
 
-  const successElement =
-    document.getElementById("successMessage");
+const error = document.getElementById("errorMessage");
 
-  if (successElement) {
+const success = document.getElementById("successMessage");
 
-    successElement.textContent = message;
+if (error) {
+    error.style.display = "none";
+}
 
-    successElement.style.display = "block";
+if (success) {
 
-  }
+    success.textContent = message;
+
+    success.style.display = "block";
 
 }
 
+}
 
 function setLoading(loading) {
 
-  const button =
-    document.querySelector(
-      "button[type='submit']"
-    );
+const button = document.querySelector(
+    "#registerForm button[type='submit'], #loginForm button[type='submit']"
+);
 
-  if (!button) return;
+if (!button) {
+    return;
+}
 
-  button.disabled = loading;
+button.disabled = loading;
 
-  if (loading) {
+if (loading) {
 
-    button.dataset.originalText =
-      button.textContent;
+    button.dataset.originalText = button.textContent;
+
+    button.textContent = "Načítavam...";
+
+} else {
 
     button.textContent =
-      "Načítavam...";
-
-  } else {
-
-    button.textContent =
-      button.dataset.originalText ||
-      "Pokračovať";
-
-  }
+        button.dataset.originalText || button.textContent;
 
 }
 
+}
 
-/* =========================================================
-   FIREBASE CHYBY
-   ========================================================= */
+// ======================================================
+// FIREBASE CHYBY – SLOVENČINA
+// ======================================================
 
 function firebaseError(error) {
 
-  switch (error.code) {
+console.error("Firebase chyba:", error);
+
+if (!error) {
+    return "Nastala neznáma chyba.";
+}
+
+switch (error.code) {
 
     case "auth/email-already-in-use":
-      return "Tento e-mail je už zaregistrovaný.";
+        return "Tento e-mail už má vytvorený účet.";
 
     case "auth/invalid-email":
-      return "E-mailová adresa nie je platná.";
+        return "E-mailová adresa nie je platná.";
 
     case "auth/weak-password":
-      return "Heslo je príliš slabé.";
+        return "Heslo je príliš slabé. Použite aspoň 6 znakov.";
 
     case "auth/user-not-found":
-      return "Používateľ s týmto e-mailom neexistuje.";
+        return "Používateľ s týmito údajmi neexistuje.";
 
     case "auth/wrong-password":
-      return "Nesprávne heslo.";
-
     case "auth/invalid-credential":
-      return "Nesprávny e-mail alebo heslo.";
+        return "Nesprávne prihlasovacie údaje.";
 
     case "auth/too-many-requests":
-      return "Príliš veľa pokusov. Skús to neskôr.";
+        return "Príliš veľa pokusov. Skúste to neskôr.";
 
     case "auth/network-request-failed":
-      return "Nepodarilo sa pripojiť k Firebase.";
+        return "Nepodarilo sa pripojiť k Firebase. Skontrolujte internet.";
+
+    case "auth/operation-not-allowed":
+        return "Prihlásenie e-mailom a heslom nie je vo Firebase povolené.";
+
+    case "auth/missing-password":
+        return "Zadajte heslo.";
+
+    case "auth/invalid-api-key":
+        return "Firebase API kľúč nie je platný.";
+
+    case "PERMISSION_DENIED":
+        return "Firebase nepovolil prístup do databázy. Skontrolujte pravidlá Realtime Database.";
 
     default:
-      return "Nastala chyba. Skús to znova.";
 
-  }
+        if (error.message) {
+            return "Firebase chyba: " + error.message;
+        }
+
+        return "Nastala neznáma chyba.";
+}
 
 }
 
+// ======================================================
+// REGISTRÁCIA
+// ======================================================
 
-/* =========================================================
-   REGISTRÁCIA
-   ========================================================= */
-
-const registerForm =
-  document.getElementById("registerForm");
-
+const registerForm = document.getElementById("registerForm");
 
 if (registerForm) {
 
-  registerForm.addEventListener(
-    "submit",
-    async event => {
+registerForm.addEventListener("submit", async function(event) {
 
-      event.preventDefault();
+    event.preventDefault();
 
+    const name =
+        document.getElementById("name")?.value.trim() || "";
 
-      const name =
-        document
-          .getElementById("name")
-          ?.value
-          .trim();
+    const username =
+        document.getElementById("username")?.value.trim() || "";
 
-      const username =
-        document
-          .getElementById("username")
-          ?.value
-          .trim();
+    const email =
+        document.getElementById("email")?.value.trim() || "";
 
-      const email =
-        document
-          .getElementById("email")
-          ?.value
-          .trim();
+    const password =
+        document.getElementById("password")?.value || "";
 
-      const password =
-        document
-          .getElementById("password")
-          ?.value;
-
-      const passwordRepeat =
-        document
-          .getElementById("passwordRepeat")
-          ?.value;
+    const passwordRepeat =
+        document.getElementById("passwordRepeat")?.value || "";
 
 
-      /* VALIDÁCIA */
+    showSuccess("");
 
-      if (!name) {
+    const error = document.getElementById("errorMessage");
+
+    if (error) {
+        error.style.display = "none";
+    }
+
+
+    // Kontrola mena
+
+    if (!name) {
+
+        showError("Zadajte meno a priezvisko.");
+
+        return;
+    }
+
+
+    // Kontrola používateľského mena
+
+    if (!username) {
+
+        showError("Zadajte používateľské meno.");
+
+        return;
+    }
+
+
+    if (username.length < 3) {
 
         showError(
-          "Zadaj svoje meno a priezvisko."
+            "Používateľské meno musí mať aspoň 3 znaky."
         );
 
         return;
-      }
+    }
 
 
-      if (!username) {
+    // Kontrola e-mailu
+
+    if (!email) {
+
+        showError("Zadajte e-mail.");
+
+        return;
+    }
+
+
+    // Kontrola hesla
+
+    if (password.length < 6) {
 
         showError(
-          "Zadaj používateľské meno."
+            "Heslo musí mať aspoň 6 znakov."
         );
 
         return;
-      }
+    }
 
 
-      if (!email) {
+    // Kontrola hesiel
+
+    if (password !== passwordRepeat) {
 
         showError(
-          "Zadaj e-mail."
+            "Heslá sa nezhodujú."
         );
 
         return;
-      }
+    }
 
 
-      if (!password) {
-
-        showError(
-          "Zadaj heslo."
-        );
-
-        return;
-      }
+    setLoading(true);
 
 
-      if (password.length < 6) {
+    try {
 
-        showError(
-          "Heslo musí mať aspoň 6 znakov."
-        );
+        // ==================================================
+        // KONTROLA, ČI UŽ EXISTUJE POUŽÍVATEĽSKÉ MENO
+        // ==================================================
 
-        return;
-      }
+        const usersSnapshot =
+            await get(ref(db, "users"));
+
+        if (usersSnapshot.exists()) {
+
+            const users =
+                usersSnapshot.val();
+
+            const usernameExists =
+                Object.values(users).some(user =>
+                    user &&
+                    user.username &&
+                    user.username.toLowerCase() ===
+                    username.toLowerCase()
+                );
+
+            if (usernameExists) {
+
+                showError(
+                    "Toto používateľské meno už niekto používa."
+                );
+
+                setLoading(false);
+
+                return;
+            }
+        }
 
 
-      if (password !== passwordRepeat) {
-
-        showError(
-          "Heslá sa nezhodujú."
-        );
-
-        return;
-      }
-
-
-      setLoading(true);
-
-
-      try {
-
-        /* Vytvorenie Firebase účtu */
+        // ==================================================
+        // VYTVORENIE FIREBASE ÚČTU
+        // ==================================================
 
         const userCredential =
-          await createUserWithEmailAndPassword(
-            auth,
-            email,
-            password
-          );
+            await createUserWithEmailAndPassword(
+                auth,
+                email,
+                password
+            );
 
 
         const user =
-          userCredential.user;
+            userCredential.user;
 
 
-        /* Uloženie profilu do Realtime Database */
+        // ==================================================
+        // VYTVORENIE PROFILU V REALTIME DATABASE
+        // ==================================================
+
+        const userData = {
+
+            uid: user.uid,
+
+            name: name,
+
+            username: username,
+
+            email: email,
+
+            role: "user",
+
+            createdAt: new Date().toISOString()
+
+        };
+
 
         await set(
-          ref(
-            db,
-            "users/" + user.uid
-          ),
-          {
-
-            uid:
-              user.uid,
-
-            name:
-              name,
-
-            username:
-              username,
-
-            email:
-              email,
-
-            role:
-              "user",
-
-            createdAt:
-              new Date().toISOString()
-
-          }
+            ref(db, "users/" + user.uid),
+            userData
         );
 
 
+        // ==================================================
+        // ÚSPEŠNÁ REGISTRÁCIA
+        // ==================================================
+
         showSuccess(
-          "Registrácia bola úspešná. Presmerúvam ťa..."
+            "Účet bol úspešne vytvorený."
         );
 
 
         setTimeout(() => {
 
-          window.location.href =
-            "app.html";
+            window.location.href = "app.html";
 
-        }, 800);
+        }, 700);
 
 
-      } catch (error) {
+    } catch (error) {
 
-        console.error(error);
-
-        showError(
-          firebaseError(error)
+        console.error(
+            "Registrácia zlyhala:",
+            error
         );
 
-      } finally {
+        showError(
+            firebaseError(error)
+        );
+
+    } finally {
 
         setLoading(false);
 
-      }
-
     }
-  );
+
+});
 
 }
 
-
-/* =========================================================
-   PRIHLÁSENIE
-   ========================================================= */
+// ======================================================
+// PRIHLÁSENIE
+// ======================================================
 
 const loginForm =
-  document.getElementById("loginForm");
-
+document.getElementById("loginForm");
 
 if (loginForm) {
 
-  loginForm.addEventListener(
-    "submit",
-    async event => {
+loginForm.addEventListener("submit", async function(event) {
 
-      event.preventDefault();
+    event.preventDefault();
 
 
-      const login =
-        document
-          .getElementById("login")
-          ?.value
-          .trim();
+    const login =
+        document.getElementById("login")?.value.trim() || "";
 
-      const password =
-        document
-          .getElementById("password")
-          ?.value;
+    const password =
+        document.getElementById("password")?.value || "";
 
 
-      if (!login) {
+    if (!login) {
 
         showError(
-          "Zadaj e-mail alebo používateľské meno."
+            "Zadajte používateľské meno alebo e-mail."
         );
 
         return;
-      }
+    }
 
 
-      if (!password) {
+    if (!password) {
 
         showError(
-          "Zadaj heslo."
+            "Zadajte heslo."
         );
 
         return;
-      }
+    }
 
 
-      setLoading(true);
+    setLoading(true);
 
 
-      try {
+    try {
 
         let email = login;
 
 
-        /*
-          Ak používateľ zadal username,
-          nájdeme jeho e-mail v databáze.
-        */
+        // ==================================================
+        // PRIHLÁSENIE CEZ POUŽÍVATEĽSKÉ MENO
+        // ==================================================
 
         if (!login.includes("@")) {
 
-          const usersSnapshot =
-            await get(
-              ref(db, "users")
-            );
+            const usersSnapshot =
+                await get(ref(db, "users"));
 
 
-          if (!usersSnapshot.exists()) {
+            if (!usersSnapshot.exists()) {
 
-            showError(
-              "Používateľ neexistuje."
-            );
+                showError(
+                    "Používateľ s týmto menom neexistuje."
+                );
 
-            return;
-          }
+                setLoading(false);
 
-
-          const allUsers =
-            usersSnapshot.val();
-
-
-          let foundUser = null;
-
-
-          for (
-            const [uid, user]
-            of Object.entries(allUsers)
-          ) {
-
-            if (
-              user.username &&
-              user.username.toLowerCase() ===
-              login.toLowerCase()
-            ) {
-
-              foundUser = user;
-
-              break;
-
+                return;
             }
 
-          }
+
+            const users =
+                usersSnapshot.val();
 
 
-          if (!foundUser) {
+            const foundUser =
+                Object.values(users).find(user =>
+                    user &&
+                    user.username &&
+                    user.username.toLowerCase() ===
+                    login.toLowerCase()
+                );
 
-            showError(
-              "Používateľ neexistuje."
-            );
 
-            return;
-          }
+            if (!foundUser || !foundUser.email) {
+
+                showError(
+                    "Používateľ s týmto menom neexistuje."
+                );
+
+                setLoading(false);
+
+                return;
+            }
 
 
-          email =
-            foundUser.email;
+            email = foundUser.email;
 
         }
 
 
-        /* Firebase login */
+        // ==================================================
+        // FIREBASE PRIHLÁSENIE
+        // ==================================================
 
         await signInWithEmailAndPassword(
-          auth,
-          email,
-          password
+            auth,
+            email,
+            password
         );
 
 
-        window.location.href =
-          "app.html";
+        // ==================================================
+        // ÚSPEŠNÉ PRIHLÁSENIE
+        // ==================================================
+
+        window.location.href = "app.html";
 
 
-      } catch (error) {
+    } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Prihlásenie zlyhalo:",
+            error
+        );
 
         showError(
-          firebaseError(error)
+            firebaseError(error)
         );
 
-      } finally {
+    } finally {
 
         setLoading(false);
 
-      }
-
     }
-  );
+
+});
 
 }
 
-
-/* =========================================================
-   ZABUDNUTÉ HESLO
-   ========================================================= */
+// ======================================================
+// ZABUDNUTÉ HESLO
+// ======================================================
 
 const forgotPassword =
-  document.getElementById(
-    "forgotPassword"
-  );
-
+document.getElementById("forgotPassword");
 
 if (forgotPassword) {
 
-  forgotPassword.addEventListener(
+forgotPassword.addEventListener(
     "click",
-    async event => {
+    async function() {
 
-      event.preventDefault();
-
-
-      const email =
-        document
-          .getElementById("login")
-          ?.value
-          .trim();
+        const login =
+            document.getElementById("login")?.value.trim() || "";
 
 
-      if (!email || !email.includes("@")) {
+        if (!login) {
 
-        showError(
-          "Najprv zadaj svoj e-mail."
-        );
+            showError(
+                "Najskôr zadajte svoj e-mail."
+            );
 
-        return;
-      }
-
-
-      try {
-
-        await sendPasswordResetEmail(
-          auth,
-          email
-        );
+            return;
+        }
 
 
-        showSuccess(
-          "Na e-mail sme poslali odkaz na obnovenie hesla."
-        );
+        let email = login;
 
 
-      } catch (error) {
+        try {
 
-        console.error(error);
+            // Ak používateľ zadal username,
+            // nájdeme jeho e-mail.
 
-        showError(
-          firebaseError(error)
-        );
+            if (!login.includes("@")) {
 
-      }
+                const usersSnapshot =
+                    await get(ref(db, "users"));
+
+
+                if (!usersSnapshot.exists()) {
+
+                    showError(
+                        "Používateľ nebol nájdený."
+                    );
+
+                    return;
+                }
+
+
+                const users =
+                    usersSnapshot.val();
+
+
+                const foundUser =
+                    Object.values(users).find(user =>
+                        user &&
+                        user.username &&
+                        user.username.toLowerCase() ===
+                        login.toLowerCase()
+                    );
+
+
+                if (!foundUser || !foundUser.email) {
+
+                    showError(
+                        "Používateľ nebol nájdený."
+                    );
+
+                    return;
+                }
+
+
+                email = foundUser.email;
+
+            }
+
+
+            await sendPasswordResetEmail(
+                auth,
+                email
+            );
+
+
+            showSuccess(
+                "Na váš e-mail bol odoslaný odkaz na obnovenie hesla."
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "Obnovenie hesla zlyhalo:",
+                error
+            );
+
+            showError(
+                firebaseError(error)
+            );
+
+        }
 
     }
-  );
+);
 
 }
 
+// ======================================================
+// ODHLÁSENIE
+// ======================================================
 
-/* =========================================================
-   ODHLÁSENIE
-   ========================================================= */
+const logoutButton =
+document.getElementById("logoutBtn");
 
-const logoutBtn =
-  document.getElementById("logoutBtn");
+if (logoutButton) {
 
-
-if (logoutBtn) {
-
-  logoutBtn.addEventListener(
+logoutButton.addEventListener(
     "click",
-    async () => {
+    async function() {
 
-      try {
+        try {
 
-        await signOut(auth);
+            await signOut(auth);
 
-        window.location.href =
-          "login.html";
+            window.location.href =
+                "login.html";
 
-      } catch (error) {
+        } catch (error) {
 
-        console.error(error);
+            console.error(
+                "Odhlásenie zlyhalo:",
+                error
+            );
 
-        showError(
-          "Odhlásenie sa nepodarilo."
-        );
+            showError(
+                firebaseError(error)
+            );
 
-      }
+        }
 
     }
-  );
+);
 
 }
 
+// ======================================================
+// OCHRANA APP.HTML
+// ======================================================
 
-/* =========================================================
-   OCHRANA APP.HTML
-   ========================================================= */
+const isAppPage =
+window.location.pathname.endsWith("app.html");
 
-if (
-  window.location.pathname.endsWith(
-    "app.html"
-  )
-) {
+if (isAppPage) {
 
-  onAuthStateChanged(
+onAuthStateChanged(
     auth,
-    user => {
+    function(user) {
 
-      if (!user) {
+        if (!user) {
 
-        window.location.href =
-          "login.html";
+            window.location.href =
+                "login.html";
 
-      }
+        }
 
     }
-  );
+);
 
 }
 
-
-/* =========================================================
-   EXPORTY
-   ========================================================= */
+// ======================================================
+// EXPORT
+// ======================================================
 
 export {
-  auth,
-  db,
-  firebaseError
+auth,
+db,
+firebaseError
 };
