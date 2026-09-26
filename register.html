@@ -1,9 +1,8 @@
 <!DOCTYPE html><html lang="sk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Kto ide so psom? – Registrácia</title>
-
-<style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kto ide so psom? – Registrácia</title><style>
     * {
         box-sizing: border-box;
         margin: 0;
@@ -121,10 +120,6 @@
         margin-top: 3px;
     }
 
-    .terms a {
-        color: #2563eb;
-    }
-
     .register-button {
         width: 100%;
         padding: 14px;
@@ -140,6 +135,11 @@
 
     .register-button:hover {
         background: #1d4ed8;
+    }
+
+    .register-button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
     }
 
     .message {
@@ -219,16 +219,13 @@
 
     </div>
 
-
     <div id="errorMessage" class="message error"></div>
 
     <div id="successMessage" class="message success"></div>
 
-
     <form id="registerForm">
 
         <div class="form-group">
-
             <label for="name">
                 Meno a priezvisko
             </label>
@@ -240,12 +237,9 @@
                 autocomplete="name"
                 required
             >
-
         </div>
 
-
         <div class="form-group">
-
             <label for="username">
                 Používateľské meno
             </label>
@@ -258,12 +252,9 @@
                 minlength="3"
                 required
             >
-
         </div>
 
-
         <div class="form-group">
-
             <label for="email">
                 E-mail
             </label>
@@ -275,12 +266,9 @@
                 autocomplete="email"
                 required
             >
-
         </div>
 
-
         <div class="form-group">
-
             <label for="password">
                 Heslo
             </label>
@@ -300,18 +288,17 @@
                     type="button"
                     class="show-password"
                     onclick="togglePassword('password')"
+                    aria-label="Zobraziť heslo"
                 >
                     👁️
                 </button>
 
             </div>
-
         </div>
-
 
         <div class="form-group">
 
-            <label for="passwordConfirm">
+            <label for="passwordRepeat">
                 Zopakujte heslo
             </label>
 
@@ -319,7 +306,7 @@
 
                 <input
                     type="password"
-                    id="passwordConfirm"
+                    id="passwordRepeat"
                     placeholder="Zopakujte heslo"
                     autocomplete="new-password"
                     minlength="6"
@@ -329,7 +316,8 @@
                 <button
                     type="button"
                     class="show-password"
-                    onclick="togglePassword('passwordConfirm')"
+                    onclick="togglePassword('passwordRepeat')"
+                    aria-label="Zobraziť heslo"
                 >
                     👁️
                 </button>
@@ -337,7 +325,6 @@
             </div>
 
         </div>
-
 
         <label class="terms">
 
@@ -353,7 +340,6 @@
 
         </label>
 
-
         <button
             type="submit"
             class="register-button"
@@ -362,7 +348,6 @@
         </button>
 
     </form>
-
 
     <div class="login-link">
 
@@ -374,102 +359,27 @@
 
     </div>
 
-
     <a href="index.html" class="back">
         ← Späť na úvod
     </a>
 
 </div>
 
-
 <footer>
     © 2026 Kto ide so psom?
 </footer>
 
 </div><script>
-
     function togglePassword(id) {
-
         const input = document.getElementById(id);
 
-        if (input.type === "password") {
-            input.type = "text";
-        } else {
-            input.type = "password";
+        if (!input) {
+            return;
         }
+
+        input.type = input.type === "password"
+            ? "text"
+            : "password";
     }
-
-
-    document
-        .getElementById("registerForm")
-        .addEventListener("submit", function(event) {
-
-            event.preventDefault();
-
-            const name =
-                document.getElementById("name").value.trim();
-
-            const username =
-                document.getElementById("username").value.trim();
-
-            const email =
-                document.getElementById("email").value.trim();
-
-            const password =
-                document.getElementById("password").value;
-
-            const passwordConfirm =
-                document.getElementById("passwordConfirm").value;
-
-            const error =
-                document.getElementById("errorMessage");
-
-            const success =
-                document.getElementById("successMessage");
-
-
-            error.style.display = "none";
-            success.style.display = "none";
-
-
-            if (password !== passwordConfirm) {
-
-                error.textContent =
-                    "Heslá sa nezhodujú.";
-
-                error.style.display = "block";
-
-                return;
-            }
-
-
-            if (password.length < 6) {
-
-                error.textContent =
-                    "Heslo musí mať aspoň 6 znakov.";
-
-                error.style.display = "block";
-
-                return;
-            }
-
-
-            /*
-                ZATIAĽ JE TO IBA VIZUÁLNA REGISTRÁCIA.
-
-                Skutočný účet sa vytvorí až po
-                napojení na databázu/backend.
-            */
-
-
-            success.textContent =
-                "Registrácia bola pripravená. Neskôr ju napojíme na databázu.";
-
-            success.style.display = "block";
-
-            document.getElementById("registerForm").reset();
-
-        });
-
-</script></body>
+</script><script type="module" src="auth.js"></script></body>
 </html>
