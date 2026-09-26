@@ -1,0 +1,475 @@
+<!DOCTYPE html><html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Kto ide so psom? – Registrácia</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        min-height: 100vh;
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #eef4ff, #f8fafc);
+        color: #1e293b;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+
+    .container {
+        width: 100%;
+        max-width: 460px;
+    }
+
+    .box {
+        background: white;
+        border-radius: 20px;
+        padding: 35px;
+        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e2e8f0;
+    }
+
+    .logo {
+        text-align: center;
+        margin-bottom: 25px;
+    }
+
+    .logo-icon {
+        width: 70px;
+        height: 70px;
+        margin: 0 auto 15px;
+        border-radius: 20px;
+        background: #e8f0fe;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 38px;
+    }
+
+    .logo h1 {
+        font-size: 25px;
+        margin-bottom: 7px;
+    }
+
+    .logo p {
+        color: #64748b;
+        font-size: 14px;
+    }
+
+    .form-group {
+        margin-bottom: 17px;
+    }
+
+    label {
+        display: block;
+        font-size: 14px;
+        font-weight: bold;
+        margin-bottom: 7px;
+    }
+
+    input {
+        width: 100%;
+        padding: 12px 13px;
+        border: 1px solid #cbd5e1;
+        border-radius: 9px;
+        font-size: 15px;
+        outline: none;
+        transition: 0.2s;
+    }
+
+    input:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .password-wrapper {
+        position: relative;
+    }
+
+    .password-wrapper input {
+        padding-right: 48px;
+    }
+
+    .show-password {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: none;
+        background: transparent;
+        font-size: 18px;
+        cursor: pointer;
+    }
+
+    .terms {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+        margin: 18px 0;
+        font-size: 13px;
+        color: #64748b;
+        line-height: 1.4;
+    }
+
+    .terms input {
+        width: auto;
+        margin-top: 3px;
+    }
+
+    .terms a {
+        color: #2563eb;
+    }
+
+    .register-button {
+        width: 100%;
+        padding: 14px;
+        background: #2563eb;
+        color: white;
+        border: none;
+        border-radius: 9px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .register-button:hover {
+        background: #1d4ed8;
+    }
+
+    .message {
+        display: none;
+        padding: 11px;
+        border-radius: 8px;
+        margin-bottom: 17px;
+        font-size: 14px;
+        text-align: center;
+    }
+
+    .error {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .success {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .login-link {
+        text-align: center;
+        margin-top: 22px;
+        font-size: 14px;
+        color: #64748b;
+    }
+
+    .login-link a {
+        color: #2563eb;
+        font-weight: bold;
+        text-decoration: none;
+    }
+
+    .login-link a:hover {
+        text-decoration: underline;
+    }
+
+    .back {
+        display: block;
+        text-align: center;
+        margin-top: 15px;
+        color: #64748b;
+        text-decoration: none;
+        font-size: 13px;
+    }
+
+    .back:hover {
+        color: #2563eb;
+    }
+
+    footer {
+        text-align: center;
+        margin-top: 20px;
+        color: #94a3b8;
+        font-size: 12px;
+    }
+
+    @media (max-width: 480px) {
+        .box {
+            padding: 28px 20px;
+        }
+    }
+</style>
+
+</head><body><div class="container"><div class="box">
+
+    <div class="logo">
+
+        <div class="logo-icon">
+            🐶
+        </div>
+
+        <h1>Vytvoriť účet</h1>
+
+        <p>Pridajte sa do aplikácie Kto ide so psom?</p>
+
+    </div>
+
+
+    <div id="errorMessage" class="message error"></div>
+
+    <div id="successMessage" class="message success"></div>
+
+
+    <form id="registerForm">
+
+        <div class="form-group">
+
+            <label for="name">
+                Meno a priezvisko
+            </label>
+
+            <input
+                type="text"
+                id="name"
+                placeholder="Zadajte meno a priezvisko"
+                autocomplete="name"
+                required
+            >
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label for="username">
+                Používateľské meno
+            </label>
+
+            <input
+                type="text"
+                id="username"
+                placeholder="Vyberte používateľské meno"
+                autocomplete="username"
+                minlength="3"
+                required
+            >
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label for="email">
+                E-mail
+            </label>
+
+            <input
+                type="email"
+                id="email"
+                placeholder="vas@email.sk"
+                autocomplete="email"
+                required
+            >
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label for="password">
+                Heslo
+            </label>
+
+            <div class="password-wrapper">
+
+                <input
+                    type="password"
+                    id="password"
+                    placeholder="Vytvorte heslo"
+                    autocomplete="new-password"
+                    minlength="6"
+                    required
+                >
+
+                <button
+                    type="button"
+                    class="show-password"
+                    onclick="togglePassword('password')"
+                >
+                    👁️
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label for="passwordConfirm">
+                Zopakujte heslo
+            </label>
+
+            <div class="password-wrapper">
+
+                <input
+                    type="password"
+                    id="passwordConfirm"
+                    placeholder="Zopakujte heslo"
+                    autocomplete="new-password"
+                    minlength="6"
+                    required
+                >
+
+                <button
+                    type="button"
+                    class="show-password"
+                    onclick="togglePassword('passwordConfirm')"
+                >
+                    👁️
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <label class="terms">
+
+            <input
+                type="checkbox"
+                id="terms"
+                required
+            >
+
+            <span>
+                Súhlasím s podmienkami používania aplikácie.
+            </span>
+
+        </label>
+
+
+        <button
+            type="submit"
+            class="register-button"
+        >
+            Vytvoriť účet
+        </button>
+
+    </form>
+
+
+    <div class="login-link">
+
+        Už máte účet?
+
+        <a href="login.html">
+            Prihlásiť sa
+        </a>
+
+    </div>
+
+
+    <a href="index.html" class="back">
+        ← Späť na úvod
+    </a>
+
+</div>
+
+
+<footer>
+    © 2026 Kto ide so psom?
+</footer>
+
+</div><script>
+
+    function togglePassword(id) {
+
+        const input = document.getElementById(id);
+
+        if (input.type === "password") {
+            input.type = "text";
+        } else {
+            input.type = "password";
+        }
+    }
+
+
+    document
+        .getElementById("registerForm")
+        .addEventListener("submit", function(event) {
+
+            event.preventDefault();
+
+            const name =
+                document.getElementById("name").value.trim();
+
+            const username =
+                document.getElementById("username").value.trim();
+
+            const email =
+                document.getElementById("email").value.trim();
+
+            const password =
+                document.getElementById("password").value;
+
+            const passwordConfirm =
+                document.getElementById("passwordConfirm").value;
+
+            const error =
+                document.getElementById("errorMessage");
+
+            const success =
+                document.getElementById("successMessage");
+
+
+            error.style.display = "none";
+            success.style.display = "none";
+
+
+            if (password !== passwordConfirm) {
+
+                error.textContent =
+                    "Heslá sa nezhodujú.";
+
+                error.style.display = "block";
+
+                return;
+            }
+
+
+            if (password.length < 6) {
+
+                error.textContent =
+                    "Heslo musí mať aspoň 6 znakov.";
+
+                error.style.display = "block";
+
+                return;
+            }
+
+
+            /*
+                ZATIAĽ JE TO IBA VIZUÁLNA REGISTRÁCIA.
+
+                Skutočný účet sa vytvorí až po
+                napojení na databázu/backend.
+            */
+
+
+            success.textContent =
+                "Registrácia bola pripravená. Neskôr ju napojíme na databázu.";
+
+            success.style.display = "block";
+
+            document.getElementById("registerForm").reset();
+
+        });
+
+</script></body>
+</html>
