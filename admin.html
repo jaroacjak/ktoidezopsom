@@ -10,7 +10,7 @@
     <div class="max-w-xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6">
         <h1 class="text-2xl font-bold text-gray-800 mb-6">🐾 Admin: Kto ide so psom</h1>
         
-        <!-- Formulár -->
+        <!-- Formulár na pridanie venčenia -->
         <form id="dogForm" class="space-y-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700">Dátum a čas venčenia</label>
@@ -33,17 +33,17 @@
 
         <hr class="my-8">
 
-        <!-- Zoznam naplánovaných venčení -->
+        <!-- Zoznam naplánovaných venčení a suplovania -->
         <h2 class="text-xl font-semibold text-gray-800 mb-4">Aktuálny rozpis a suplovanie</h2>
         <div id="adminWalksList" class="space-y-3">
-            <!-- Sem sa načítajú dáta -->
+            <p class="text-gray-500 text-sm">Načítavam dáta...</p>
         </div>
     </div>
 
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBiXQt7bHPI15wp4krGq-GwPz7BfsSvaEE",
@@ -63,6 +63,7 @@
         const statusMessage = document.getElementById('statusMessage');
         const walksList = document.getElementById('adminWalksList');
 
+        // Pridanie nového záznamu
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             const dateTime = document.getElementById('dateTime').value;
@@ -87,6 +88,7 @@
             });
         });
 
+        // Živé načítavanie a zobrazenie pre admina
         onValue(ref(db, 'walks'), (snapshot) => {
             walksList.innerHTML = '';
             const data = snapshot.val();
@@ -108,6 +110,8 @@
                     badge = `<span class="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded font-semibold">Hľadá sa suplovanie!</span>`;
                 } else if (walk.status === 'substituted') {
                     badge = `<span class="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded font-semibold">Supluje: ${walk.substitute}</span>`;
+                } else {
+                    badge = `<span class="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded font-semibold">Všetko OK</span>`;
                 }
 
                 const item = document.createElement('div');
@@ -126,6 +130,7 @@
             });
         });
 
+        // Globálna funkcia na vymazanie záznamu
         window.deleteWalk = function(id) {
             if (confirm("Naozaj chceš vymazať tento záznam?")) {
                 remove(ref(db, 'walks/' + id));
