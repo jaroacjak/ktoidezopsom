@@ -3,30 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kto ide so psom?</title>
+    <title>Moje venčenia - Kto ide so psom</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen p-6">
     <div class="max-w-xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6">
         <!-- Hlavička s odhlásením -->
         <div class="flex justify-between items-center mb-4">
-            <h1 class="text-2xl font-bold text-gray-800">🐕 Moje venčenia a psy</h1>
+            <h1 class="text-2xl font-bold text-gray-800">🐕 Moje priradené venčenia</h1>
             <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded transition">Odhlásiť sa</button>
         </div>
         
-        <div class="flex justify-between items-center mb-6 text-xs text-gray-500 bg-gray-50 p-3 rounded-lg border">
+        <div class="mb-6 text-xs text-gray-500 bg-gray-50 p-3 rounded-lg border flex justify-between items-center">
             <div>
                 <span id="userEmailDisplay" class="block font-semibold text-gray-700">Prihlásený: Načítavam...</span>
-                <span id="detectedNameDisplay" class="text-indigo-600 font-bold"></span>
+                <span id="mappedNameDisplay" class="text-indigo-600 font-bold"></span>
             </div>
-            <button id="toggleFilterBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-1.5 rounded transition">
-                Zobraziť iba moje psy/termíny
-            </button>
         </div>
 
-        <h2 id="sectionTitle" class="text-lg font-semibold text-gray-800 mb-3">Všetky naplánované venčenia</h2>
         <div id="publicWalksList" class="space-y-3">
-            <p class="text-gray-500 text-center">Načítavam rozpis...</p>
+            <p class="text-gray-500 text-center">Načítavam tvoje venčenia...</p>
         </div>
     </div>
 
@@ -52,21 +48,19 @@
         const db = getDatabase(app);
 
         let currentUserEmail = "";
-        let showOnlyMine = false; // Predvolene ukáže všetko, prepínačom sa filtruje
-        let allWalksData = null;
 
         onAuthStateChanged(auth, (user) => {
             if (!user) {
                 window.location.href = "login.html";
             } else {
-                currentUserEmail = user.email;
-                document.getElementById('userEmailDisplay').textContent = `E-mail: ${currentUserEmail}`;
+                currentUserEmail = user.email.toLowerCase();
+                document.getElementById('userEmailDisplay').textContent = `E-mail: ${user.email}`;
                 
-                // Odhadneme meno z e-mailu (napr. andrej@... -> andrej, jarko.novak@... -> jarko)
-                const inferredName = currentUserEmail.split('@')[0].replace(/[._-]/g, ' ').toLowerCase();
-                document.getElementById('detectedNameDisplay').textContent = `Hľadané meno: ${inferredName}`;
+                // Určenie, aké mená v databáze patria tomuto používateľovi
+                let targetNames = getTargetNames(currentUserEmail);
+                document.getElementById('mappedNameDisplay').textContent = `Zobrazené pre mená: ${targetNames.join(', ')}`;
                 
-                loadWalks();
+                loadWalks(targetNames);
             }
         });
 
@@ -76,131 +70,103 @@
             });
         });
 
-        const toggleFilterBtn = document.getElementById('toggleFilterBtn');
-        toggleFilterBtn.addEventListener('click', () => {
-            showOnlyMine = !showOnlyMine;
-            if (showOnlyMine) {
-                toggleFilterBtn.textContent = "Zobraziť všetky venčenia";
-                toggleFilterBtn.className = "bg-gray-600 hover:bg-gray-700 text-white text-xs px-3 py-1.5 rounded transition";
-                document.getElementById('sectionTitle').textContent = "Moje priradené psy a termíny";
+        // Mapovanie e-mailov na mená v databáze (sem si môžeš dopísať ďalších ľudí)
+        function getTargetNames(email) {
+            if (email.includes("jarko") || email.includes("jaroslav")) {
+                return ["jarko", "jaroslav"]; // Ak e-mail obsahuje jarko alebo jaroslav, vyhľadá oboje
+            } else if (email.includes("andrej")) {
+                return ["andrej"];
             } else {
-                toggleFilterBtn.textContent = "Zobraziť iba moje psy/termíny";
-                toggleFilterBtn.className = "bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-1.5 rounded transition";
-                document.getElementById('sectionTitle').textContent = "Všetko naplánované";
+                // Ak sa nenájde špeciálna zhoda, vezme text pred zavináčom ako meno
+                const defaultName = email.split('@')[0];
+                return [defaultName];
             }
-            renderWalks();
-        });
+        }
 
         const publicWalksList = document.getElementById('publicWalksList');
 
-        function loadWalks() {
+        function loadWalks(targetNames) {
             onValue(ref(db, 'walks'), (snapshot) => {
-                allWalksData = snapshot.val();
-                renderWalks();
-            });
-        }
-
-        function renderWalks() {
-            publicWalksList.innerHTML = '';
-            const data = allWalksData;
-            
-            if (!data) {
-                publicWalksList.innerHTML = '<p class="text-gray-500 text-center">Zatiaľ nie je naplánované žiadne venčenie.</p>';
-                return;
-            }
-
-            // Získame časti mena z e-mailu pre flexibilné porovnávanie (napr. Andrej, Jarko, Jaroslav)
-            const emailPrefix = currentUserEmail.split('@')[0].toLowerCase();
-            const nameKeywords = emailPrefix.split(/[._-]/); // rozdelí napr. "jarko.novak" na ["jarko", "novak"]
-
-            let walksArray = Object.keys(data).map(key => ({
-                id: key,
-                ...data[key]
-            })).sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
-
-            // Ak je zapnutý filter na "iba moje", filtrujeme podľa mena v databáze (stĺpec person)
-            if (showOnlyMine) {
-                walksArray = walksArray.filter(walk => {
-                    const personInDb = walk.person.toLowerCase();
-                    // Skontroluje, či niektoré kľúčové slovo z e-mailu sedí s menom v databáze (alebo naopak)
-                    return nameKeywords.some(keyword => keyword.length > 2 && personInDb.includes(keyword));
-                });
-            }
-
-            if (walksArray.length === 0) {
-                publicWalksList.innerHTML = '<p class="text-gray-500 text-center">Žiadne priradené venčenia pre tvoj účet sa nenašli.</p>';
-                return;
-            }
-
-            walksArray.forEach((walk) => {
-                const dateFormatted = new Date(walk.dateTime).toLocaleString('sk-SK', {
-                    weekday: 'short', year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                });
-
-                let actionHtml = '';
-                let cardBg = 'bg-indigo-50 border-indigo-100';
-
-                if (walk.status === 'need_sub') {
-                    cardBg = 'bg-amber-50 border-amber-200';
-                    actionHtml = `
-                        <div class="mt-2 pt-2 border-t border-amber-200 flex gap-2 items-center">
-                            <input type="text" id="subName-${walk.id}" placeholder="Tvoje meno na suplovanie" class="text-xs p-1.5 border rounded w-full">
-                            <button onclick="takeSubstitute('${walk.id}')" class="bg-amber-600 hover:bg-amber-700 text-white text-xs px-3 py-1.5 rounded font-medium whitespace-nowrap">Zaskočiť</button>
-                        </div>
-                    `;
-                } else if (walk.status === 'substituted') {
-                    cardBg = 'bg-green-50 border-green-200';
-                    actionHtml = `
-                        <div class="mt-2 text-xs text-green-700 font-medium">
-                            ✓ Supluje: <span class="font-bold">${walk.substitute}</span> (Pôvodne: ${walk.person})
-                        </div>
-                    `;
-                } else if (walk.status === 'late') {
-                    cardBg = 'bg-purple-50 border-purple-200';
-                    actionHtml = `
-                        <div class="mt-2 text-xs text-purple-700 font-medium">
-                            ⏰ Venčiar príde neskôr: <span class="font-bold">${walk.lateTime}</span>
-                        </div>
-                    `;
-                } else {
-                    actionHtml = `
-                        <div class="mt-2 pt-2 border-t border-indigo-100 flex justify-between items-center">
-                            <span class="text-xs text-gray-500">Môžeš niekoho zaskočiť?</span>
-                            <button onclick="requestSubstitute('${walk.id}')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs px-2.5 py-1 rounded transition">Nemôžem ísť (Hľadať suplu)</button>
-                        </div>
-                    `;
+                publicWalksList.innerHTML = '';
+                const data = snapshot.val();
+                
+                if (!data) {
+                    publicWalksList.innerHTML = '<p class="text-gray-500 text-center">Zatiaľ nie je naplánované žiadne venčenie.</p>';
+                    return;
                 }
 
-                const item = document.createElement('div');
-                item.className = `${cardBg} border p-4 rounded-lg shadow-sm flex flex-col justify-between`;
-                item.innerHTML = `
-                    <div>
-                        <div class="text-xs font-semibold text-indigo-600 uppercase tracking-wide">${dateFormatted}</div>
-                        <div class="text-lg font-bold text-gray-800">👤 ${walk.person} ➔ 🐕 <span class="text-indigo-700">${walk.dog}</span></div>
-                    </div>
-                    ${actionHtml}
-                `;
-                publicWalksList.appendChild(item);
+                let walksArray = Object.keys(data).map(key => ({
+                    id: key,
+                    ...data[key]
+                })).sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+
+                // FILTROVANIE: Zoberieme iba tie, kde meno v databáze zodpovedá prihlásenému používateľovi
+                walksArray = walksArray.filter(walk => {
+                    const personInDb = walk.person.toLowerCase();
+                    return targetNames.some(name => personInDb.includes(name));
+                });
+
+                if (walksArray.length === 0) {
+                    publicWalksList.innerHTML = '<p class="text-gray-500 text-center">Nemáš priradené žiadne venčenia.</p>';
+                    return;
+                }
+
+                walksArray.forEach((walk) => {
+                    const dateFormatted = new Date(walk.dateTime).toLocaleString('sk-SK', {
+                        weekday: 'short', year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                    });
+
+                    let actionHtml = '';
+                    let cardBg = 'bg-indigo-50 border-indigo-100';
+
+                    if (walk.status === 'need_sub') {
+                        cardBg = 'bg-amber-50 border-amber-200';
+                        actionHtml = `
+                            <div class="mt-2 pt-2 border-t border-amber-200 flex gap-2 items-center text-xs text-amber-800 font-medium">
+                                ⚠️ Pre tento termín hľadáš suplovanie.
+                            </div>
+                        `;
+                    } else if (walk.status === 'substituted') {
+                        cardBg = 'bg-green-50 border-green-200';
+                        actionHtml = `
+                            <div class="mt-2 text-xs text-green-700 font-medium">
+                                ✓ Tento termín za teba supluje: <span class="font-bold">${walk.substitute}</span>
+                            </div>
+                        `;
+                    } else if (walk.status === 'late') {
+                        cardBg = 'bg-purple-50 border-purple-200';
+                        actionHtml = `
+                            <div class="mt-2 text-xs text-purple-700 font-medium">
+                                ⏰ Oznámené meškanie: <span class="font-bold">${walk.lateTime}</span>
+                            </div>
+                        `;
+                    } else {
+                        // Ak nemôže ísť, môže kliknúť na hľadanie suplovania
+                        actionHtml = `
+                            <div class="mt-2 pt-2 border-t border-indigo-100 flex justify-end">
+                                <button onclick="requestSubstitute('${walk.id}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs px-3 py-1.5 rounded transition font-medium">Nemôžem ísť (Hľadať suplu)</button>
+                            </div>
+                        `;
+                    }
+
+                    const item = document.createElement('div');
+                    item.className = `${cardBg} border p-4 rounded-lg shadow-sm flex flex-col justify-between`;
+                    item.innerHTML = `
+                        <div>
+                            <div class="text-xs font-semibold text-indigo-600 uppercase tracking-wide">${dateFormatted}</div>
+                            <div class="text-lg font-bold text-gray-800">🐕 Pes: <span class="text-indigo-700">${walk.dog}</span></div>
+                        </div>
+                        ${actionHtml}
+                    `;
+                    publicWalksList.appendChild(item);
+                });
             });
         }
 
         window.requestSubstitute = function(id) {
-            if (confirm("Chceš označiť tento termín, že potrebuje suplovanie?")) {
+            if (confirm("Naozaj chceš označiť svoj termín, že potrebuje suplovanie?")) {
                 update(ref(db, 'walks/' + id), { status: 'need_sub' });
             }
-        }
-
-        window.takeSubstitute = function(id) {
-            const input = document.getElementById(`subName-${id}`);
-            const substituteName = input.value.trim();
-            if (!substituteName) {
-                alert("Prosím, zadaj svoje meno.");
-                return;
-            }
-            update(ref(db, 'walks/' + id), {
-                status: 'substituted',
-                substitute: substituteName
-            });
         }
     </script>
 </body>
