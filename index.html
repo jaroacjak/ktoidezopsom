@@ -1,216 +1,121 @@
-<!DOCTYPE html><html lang="sk">
+<!DOCTYPE html>
+<html lang="sk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Kto ide so psom?</title>
-
-<style>
-    * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-    }
-
-    body {
-        min-height: 100vh;
-        font-family: Arial, sans-serif;
-        background: linear-gradient(135deg, #eef4ff, #f8fafc);
-        color: #1e293b;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .container {
-        width: 100%;
-        max-width: 850px;
-        padding: 25px;
-    }
-
-    .box {
-        background: white;
-        border-radius: 24px;
-        padding: 55px 40px;
-        text-align: center;
-        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.08);
-        border: 1px solid #e2e8f0;
-    }
-
-    .logo {
-        width: 100px;
-        height: 100px;
-        margin: 0 auto 25px;
-        background: #e8f0fe;
-        border-radius: 28px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 55px;
-    }
-
-    h1 {
-        font-size: 38px;
-        margin-bottom: 12px;
-    }
-
-    .subtitle {
-        color: #64748b;
-        font-size: 17px;
-        margin-bottom: 35px;
-    }
-
-    .buttons {
-        display: flex;
-        justify-content: center;
-        gap: 15px;
-    }
-
-    .button {
-        display: inline-block;
-        padding: 14px 28px;
-        border-radius: 10px;
-        text-decoration: none;
-        font-weight: bold;
-        font-size: 16px;
-        transition: 0.2s;
-    }
-
-    .login {
-        background: #2563eb;
-        color: white;
-    }
-
-    .login:hover {
-        background: #1d4ed8;
-    }
-
-    .register {
-        background: #e8f0fe;
-        color: #2563eb;
-    }
-
-    .register:hover {
-        background: #dbeafe;
-    }
-
-    .features {
-        margin-top: 45px;
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 15px;
-    }
-
-    .feature {
-        padding: 20px;
-        background: #f8fafc;
-        border-radius: 14px;
-    }
-
-    .feature-icon {
-        font-size: 30px;
-        margin-bottom: 10px;
-    }
-
-    .feature h3 {
-        font-size: 16px;
-        margin-bottom: 6px;
-    }
-
-    .feature p {
-        font-size: 13px;
-        color: #64748b;
-    }
-
-    footer {
-        margin-top: 30px;
-        font-size: 12px;
-        color: #94a3b8;
-    }
-
-    @media (max-width: 650px) {
-
-        .box {
-            padding: 40px 20px;
-        }
-
-        h1 {
-            font-size: 29px;
-        }
-
-        .buttons {
-            flex-direction: column;
-        }
-
-        .button {
-            width: 100%;
-        }
-
-        .features {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
-
-</head><body><div class="container">
-
-    <div class="box">
-
-        <div class="logo">
-            🐶
-        </div>
-
-        <h1>Kto ide so psom?</h1>
-
-        <p class="subtitle">
-            Jednoduchý systém na organizovanie venčenia psov.
-        </p>
-
-        <div class="buttons">
-
-            <a href="login.html" class="button login">
-                Prihlásiť sa
-            </a>
-
-            <a href="register.html" class="button register">
-                Registrovať sa
-            </a>
-
-        </div>
-
-        <div class="features">
-
-            <div class="feature">
-                <div class="feature-icon">📅</div>
-                <h3>Rozpis</h3>
-                <p>
-                    Prehľad všetkých naplánovaných venčení.
-                </p>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Kto ide so psom</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-6">
+    <div class="max-w-xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">🐾 Admin: Kto ide so psom</h1>
+        
+        <!-- Formulár -->
+        <form id="dogForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Dátum a čas venčenia</label>
+                <input type="datetime-local" id="dateTime" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 focus:ring-indigo-500 focus:border-indigo-500">
             </div>
-
-            <div class="feature">
-                <div class="feature-icon">🐶</div>
-                <h3>Psy</h3>
-                <p>
-                    Zoznam psov a informácie o nich.
-                </p>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Meno venčiara (Kto?)</label>
+                <input type="text" id="personName" placeholder="napr. Jano" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 focus:ring-indigo-500 focus:border-indigo-500">
             </div>
-
-            <div class="feature">
-                <div class="feature-icon">🔄</div>
-                <h3>Suplovanie</h3>
-                <p>
-                    Admin môže jednoducho nastaviť náhradníka.
-                </p>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Meno psa (So psom?)</label>
+                <input type="text" id="dogName" placeholder="napr. Rex" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 focus:ring-indigo-500 focus:border-indigo-500">
             </div>
+            <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 transition">
+                Pridať záznam
+            </button>
+        </form>
 
+        <div id="statusMessage" class="mt-4 text-center text-sm font-medium"></div>
+
+        <hr class="my-8">
+
+        <!-- Zoznam naplánovaných venčení s možnosťou vymazania -->
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Aktuálny rozpis</h2>
+        <div id="adminWalksList" class="space-y-2">
+            <!-- Sem sa načítajú dáta -->
         </div>
-
-        <footer>
-            © 2026 Kto ide so psom?
-        </footer>
-
     </div>
 
-</div>
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+        const firebaseConfig = {
+            apiKey: "AIzaSyBiXQt7bHPI15wp4krGq-GwPz7BfsSvaEE",
+            authDomain: "ktoidezopsom.firebaseapp.com",
+            databaseURL: "https://ktoidezopsom-default-rtdb.firebaseio.com",
+            projectId: "ktoidezopsom",
+            storageBucket: "ktoidezopsom.firebasestorage.app",
+            messagingSenderId: "354613832067",
+            appId: "1:354613832067:web:ddf12b03ed6b4a61d8aeb6",
+            measurementId: "G-Z8YC2L3RK7"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        const form = document.getElementById('dogForm');
+        const statusMessage = document.getElementById('statusMessage');
+        const walksList = document.getElementById('adminWalksList');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const dateTime = document.getElementById('dateTime').value;
+            const person = document.getElementById('personName').value;
+            const dog = document.getElementById('dogName').value;
+
+            push(ref(db, 'walks'), {
+                dateTime: dateTime,
+                person: person,
+                dog: dog,
+                createdAt: Date.now()
+            }).then(() => {
+                statusMessage.textContent = "Záznam úspešne pridaný!";
+                statusMessage.className = "mt-4 text-center text-sm font-medium text-green-600";
+                form.reset();
+                setTimeout(() => statusMessage.textContent = "", 3000);
+            }).catch((error) => {
+                statusMessage.textContent = "Chyba: " + error.message;
+                statusMessage.className = "mt-4 text-center text-sm font-medium text-red-600";
+            });
+        });
+
+        // Načítanie a zobrazenie pre admina (s tlačidlom zmazať)
+        onValue(ref(db, 'walks'), (snapshot) => {
+            walksList.innerHTML = '';
+            const data = snapshot.val();
+            if (!data) {
+                walksList.innerHTML = '<p class="text-gray-500 text-sm">Žiadne naplánované venčenia.</p>';
+                return;
+            }
+
+            Object.keys(data).forEach((key) => {
+                const walk = data[key];
+                const dateFormatted = new Date(walk.dateTime).toLocaleString('sk-SK');
+                
+                const item = document.createElement('div');
+                item.className = "flex justify-between items-center bg-gray-50 p-3 rounded-lg border";
+                item.innerHTML = `
+                    <div>
+                        <span class="font-bold text-gray-800">${walk.person}</span> ide so psom <span class="text-indigo-600 font-semibold">${walk.dog}</span>
+                        <div class="text-xs text-gray-500">${dateFormatted}</div>
+                    </div>
+                    <button onclick="deleteWalk('${key}')" class="bg-red-500 text-white text-xs px-3 py-1.5 rounded hover:bg-red-600 transition">Zmazať</button>
+                `;
+                walksList.appendChild(item);
+            });
+        });
+
+        window.deleteWalk = function(id) {
+            if (confirm("Naozaj chceš vymazať tento záznam?")) {
+                remove(ref(db, 'walks/' + id));
+            }
+        }
+    </script>
 </body>
 </html>
