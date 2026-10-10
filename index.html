@@ -9,12 +9,17 @@
 <body class="bg-gray-100 min-h-screen p-6">
     <div class="max-w-xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6">
         <!-- Hlavička s odhlásením -->
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex justify-between items-center mb-4">
             <h1 class="text-2xl font-bold text-gray-800">🐕 Kto ide so psom?</h1>
             <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded transition">Odhlásiť sa</button>
         </div>
         
-        <div id="userEmailDisplay" class="text-xs text-gray-500 mb-4">Prihlásený ako: Načítavam...</div>
+        <div class="flex justify-between items-center mb-6 text-xs text-gray-500">
+            <span id="userEmailDisplay">Prihlásený ako: Načítavam...</span>
+            <label class="flex items-center gap-1 cursor-pointer">
+                <input type="checkbox" id="filterMyWalks" class="rounded"> Zobraziť iba moje venčenia
+            </label>
+        </div>
 
         <div id="publicWalksList" class="space-y-3">
             <p class="text-gray-500 text-center">Načítavam rozpis...</p>
@@ -42,12 +47,16 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // Kontrola prihlásenia (ak nie je prihlásený, šup na login.html)
+        let currentUserEmail = "";
+
+        // Kontrola prihlásenia
         onAuthStateChanged(auth, (user) => {
             if (!user) {
                 window.location.href = "login.html";
             } else {
-                document.getElementById('userEmailDisplay').textContent = `Prihlásený ako: ${user.email}`;
+                currentUserEmail = user.email;
+                document.getElementById('userEmailDisplay').textContent = `Prihlásený: ${currentUserEmail}`;
+                loadWalks(); // Načítaj dáta až po zistení používateľa
             }
         });
 
@@ -59,21 +68,57 @@
         });
 
         const publicWalksList = document.getElementById('publicWalksList');
+        const filterCheckbox = document.getElementById('filterMyWalks');
 
-        // Načítanie rozpisu z databázy
-        onValue(ref(db, 'walks'), (snapshot) => {
+        filterCheckbox.addEventListener('change', loadWalks);
+
+        let allWalksData = null;
+
+        function loadWalks() {
+            onValue(ref(db, 'walks'), (snapshot) => {
+                allWalksData = snapshot.val();
+                renderWalks();
+            });
+        }
+
+        function renderWalks() {
             publicWalksList.innerHTML = '';
-            const data = snapshot.val();
+            const data = allWalksData;
             
             if (!data) {
                 publicWalksList.innerHTML = '<p class="text-gray-500 text-center">Zatiaľ nie je naplánované žiadne venčenie.</p>';
                 return;
             }
 
-            const walksArray = Object.keys(data).map(key => ({
+            const onlyMine = filterCheckbox.checked;
+
+            // Zistenie mena na základe e-mailu alebo predvolene pre Jaroslava/Jarka
+            let searchNames = [];
+            if (currentUserEmail.toLowerCase().includes("jaroslav") || currentUserEmail.toLowerCase().includes("jarko")) {
+                searchNames = ["jaroslav", "jarko"];
+            } else {
+                // Skúsime vyťažiť meno z e-mailu pred zavináčom (napr. "jarko.novak@gmail.com" -> "jarko")
+                const emailName = currentUserEmail.split('@')[0].toLowerCase();
+                searchNames = [emailName];
+            }
+
+            let walksArray = Object.keys(data).map(key => ({
                 id: key,
                 ...data[key]
             })).sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+
+            // Filtrovanie, ak je začiarknuté "Zobraziť iba moje venčenia"
+            if (onlyMine) {
+                walksArray = walksArray.filter(walk => {
+                    const personLower = walk.person.toLowerCase();
+                    return searchNames.some(name => personLower.includes(name));
+                });
+            }
+
+            if (walksArray.length === 0) {
+                publicWalksList.innerHTML = '<p class="text-gray-500 text-center">Žiadne tvoje venčenia sa nenašli.</p>';
+                return;
+            }
 
             walksArray.forEach((walk) => {
                 const dateFormatted = new Date(walk.dateTime).toLocaleString('sk-SK', {
@@ -125,7 +170,7 @@
                 `;
                 publicWalksList.appendChild(item);
             });
-        });
+        }
 
         window.requestSubstitute = function(id) {
             if (confirm("Chceš označiť tento termín, že potrebuje suplovanie?")) {
