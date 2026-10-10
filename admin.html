@@ -33,9 +33,9 @@
 
         <hr class="my-8">
 
-        <!-- Zoznam naplánovaných venčení s možnosťou vymazania -->
-        <h2 class="text-xl font-semibold text-gray-800 mb-4">Aktuálny rozpis</h2>
-        <div id="adminWalksList" class="space-y-2">
+        <!-- Zoznam naplánovaných venčení -->
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Aktuálny rozpis a suplovanie</h2>
+        <div id="adminWalksList" class="space-y-3">
             <!-- Sem sa načítajú dáta -->
         </div>
     </div>
@@ -43,7 +43,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBiXQt7bHPI15wp4krGq-GwPz7BfsSvaEE",
@@ -73,6 +73,8 @@
                 dateTime: dateTime,
                 person: person,
                 dog: dog,
+                status: 'ok', // ok, need_sub, substituted
+                substitute: '',
                 createdAt: Date.now()
             }).then(() => {
                 statusMessage.textContent = "Záznam úspešne pridaný!";
@@ -85,7 +87,6 @@
             });
         });
 
-        // Načítanie a zobrazenie pre admina (s tlačidlom zmazať)
         onValue(ref(db, 'walks'), (snapshot) => {
             walksList.innerHTML = '';
             const data = snapshot.val();
@@ -94,18 +95,32 @@
                 return;
             }
 
-            Object.keys(data).forEach((key) => {
-                const walk = data[key];
+            const walksArray = Object.keys(data).map(key => ({
+                id: key,
+                ...data[key]
+            })).sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+
+            walksArray.forEach((walk) => {
                 const dateFormatted = new Date(walk.dateTime).toLocaleString('sk-SK');
                 
+                let badge = '';
+                if (walk.status === 'need_sub') {
+                    badge = `<span class="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded font-semibold">Hľadá sa suplovanie!</span>`;
+                } else if (walk.status === 'substituted') {
+                    badge = `<span class="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded font-semibold">Supluje: ${walk.substitute}</span>`;
+                }
+
                 const item = document.createElement('div');
-                item.className = "flex justify-between items-center bg-gray-50 p-3 rounded-lg border";
+                item.className = "bg-gray-50 p-3 rounded-lg border flex flex-col gap-2";
                 item.innerHTML = `
-                    <div>
-                        <span class="font-bold text-gray-800">${walk.person}</span> ide so psom <span class="text-indigo-600 font-semibold">${walk.dog}</span>
-                        <div class="text-xs text-gray-500">${dateFormatted}</div>
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="text-xs text-gray-500">${dateFormatted}</div>
+                            <span class="font-bold text-gray-800">${walk.person}</span> ide so psom <span class="text-indigo-600 font-semibold">${walk.dog}</span>
+                            <div class="mt-1">${badge}</div>
+                        </div>
+                        <button onclick="deleteWalk('${walk.id}')" class="bg-red-500 text-white text-xs px-3 py-1.5 rounded hover:bg-red-600 transition">Zmazať</button>
                     </div>
-                    <button onclick="deleteWalk('${key}')" class="bg-red-500 text-white text-xs px-3 py-1.5 rounded hover:bg-red-600 transition">Zmazať</button>
                 `;
                 walksList.appendChild(item);
             });
