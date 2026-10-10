@@ -1,385 +1,72 @@
-<!DOCTYPE html><html lang="sk">
+<!DOCTYPE html>
+<html lang="sk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kto ide so psom? – Registrácia</title><style>
-    * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-    }
+    <title>Registrácia - Kto ide so psom</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
+    <div class="max-w-md w-full bg-white rounded-xl shadow-md overflow-hidden p-6">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">🐾 Registrácia</h1>
+        
+        <form id="registerForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">E-mail</label>
+                <input type="email" id="regEmail" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Heslo (min. 6 znakov)</label>
+                <input type="password" id="regPassword" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 transition">
+                Zaregistrovať sa
+            </button>
+        </form>
 
-    body {
-        min-height: 100vh;
-        font-family: Arial, sans-serif;
-        background: linear-gradient(135deg, #eef4ff, #f8fafc);
-        color: #1e293b;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 20px;
-    }
+        <div id="errorMessage" class="mt-4 text-center text-sm font-medium text-red-600"></div>
 
-    .container {
-        width: 100%;
-        max-width: 460px;
-    }
-
-    .box {
-        background: white;
-        border-radius: 20px;
-        padding: 35px;
-        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.08);
-        border: 1px solid #e2e8f0;
-    }
-
-    .logo {
-        text-align: center;
-        margin-bottom: 25px;
-    }
-
-    .logo-icon {
-        width: 70px;
-        height: 70px;
-        margin: 0 auto 15px;
-        border-radius: 20px;
-        background: #e8f0fe;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 38px;
-    }
-
-    .logo h1 {
-        font-size: 25px;
-        margin-bottom: 7px;
-    }
-
-    .logo p {
-        color: #64748b;
-        font-size: 14px;
-    }
-
-    .form-group {
-        margin-bottom: 17px;
-    }
-
-    label {
-        display: block;
-        font-size: 14px;
-        font-weight: bold;
-        margin-bottom: 7px;
-    }
-
-    input {
-        width: 100%;
-        padding: 12px 13px;
-        border: 1px solid #cbd5e1;
-        border-radius: 9px;
-        font-size: 15px;
-        outline: none;
-        transition: 0.2s;
-    }
-
-    input:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-    }
-
-    .password-wrapper {
-        position: relative;
-    }
-
-    .password-wrapper input {
-        padding-right: 48px;
-    }
-
-    .show-password {
-        position: absolute;
-        right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        border: none;
-        background: transparent;
-        font-size: 18px;
-        cursor: pointer;
-    }
-
-    .register-button {
-        width: 100%;
-        padding: 14px;
-        background: #2563eb;
-        color: white;
-        border: none;
-        border-radius: 9px;
-        font-size: 16px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: 0.2s;
-    }
-
-    .register-button:hover {
-        background: #1d4ed8;
-    }
-
-    .register-button:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-
-    .message {
-        display: none;
-        padding: 11px;
-        border-radius: 8px;
-        margin-bottom: 17px;
-        font-size: 14px;
-        text-align: center;
-    }
-
-    .error {
-        background: #fee2e2;
-        color: #b91c1c;
-    }
-
-    .success {
-        background: #dcfce7;
-        color: #166534;
-    }
-
-    .login-link {
-        text-align: center;
-        margin-top: 22px;
-        font-size: 14px;
-        color: #64748b;
-    }
-
-    .login-link a {
-        color: #2563eb;
-        font-weight: bold;
-        text-decoration: none;
-    }
-
-    .login-link a:hover {
-        text-decoration: underline;
-    }
-
-    .back {
-        display: block;
-        text-align: center;
-        margin-top: 15px;
-        color: #64748b;
-        text-decoration: none;
-        font-size: 13px;
-    }
-
-    .back:hover {
-        color: #2563eb;
-    }
-
-    footer {
-        text-align: center;
-        margin-top: 20px;
-        color: #94a3b8;
-        font-size: 12px;
-    }
-
-    @media (max-width: 480px) {
-        .box {
-            padding: 28px 20px;
-        }
-    }
-</style>
-
-</head><body><div class="container"><div class="box">
-
-    <div class="logo">
-
-        <div class="logo-icon">
-            🐶
+        <div class="mt-6 text-center text-sm">
+            <span class="text-gray-600">Už máš účet?</span> 
+            <a href="login.html" class="text-indigo-600 font-semibold hover:underline">Prihlásiť sa</a>
         </div>
-
-        <h1>Vytvoriť účet</h1>
-
-        <p>Pridajte sa do aplikácie Kto ide so psom?</p>
-
     </div>
 
-    <div id="errorMessage" class="message error"></div>
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-    <div id="successMessage" class="message success"></div>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBiXQt7bHPI15wp4krGq-GwPz7BfsSvaEE",
+            authDomain: "ktoidezopsom.firebaseapp.com",
+            databaseURL: "https://ktoidezopsom-default-rtdb.firebaseio.com",
+            projectId: "ktoidezopsom",
+            storageBucket: "ktoidezopsom.firebasestorage.app",
+            messagingSenderId: "354613832067",
+            appId: "1:354613832067:web:ddf12b03ed6b4a61d8aeb6",
+            measurementId: "G-Z8YC2L3RK7"
+        };
 
-    <form id="registerForm">
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
 
-        <div class="form-group">
+        const form = document.getElementById('registerForm');
+        const errorMessage = document.getElementById('errorMessage');
 
-            <label for="name">
-                Meno a priezvisko
-            </label>
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
 
-            <input
-                type="text"
-                id="name"
-                placeholder="Zadajte meno a priezvisko"
-                autocomplete="name"
-                required
-            >
-
-        </div>
-
-
-        <div class="form-group">
-
-            <label for="username">
-                Používateľské meno
-            </label>
-
-            <input
-                type="text"
-                id="username"
-                placeholder="Vyberte používateľské meno"
-                autocomplete="username"
-                minlength="3"
-                required
-            >
-
-        </div>
-
-
-        <div class="form-group">
-
-            <label for="email">
-                E-mail
-            </label>
-
-            <input
-                type="email"
-                id="email"
-                placeholder="vas@email.sk"
-                autocomplete="email"
-                required
-            >
-
-        </div>
-
-
-        <div class="form-group">
-
-            <label for="password">
-                Heslo
-            </label>
-
-            <div class="password-wrapper">
-
-                <input
-                    type="password"
-                    id="password"
-                    placeholder="Vytvorte heslo"
-                    autocomplete="new-password"
-                    minlength="6"
-                    required
-                >
-
-                <button
-                    type="button"
-                    class="show-password"
-                    onclick="togglePassword('password')"
-                    aria-label="Zobraziť heslo"
-                >
-                    👁️
-                </button>
-
-            </div>
-
-        </div>
-
-
-        <div class="form-group">
-
-            <label for="passwordRepeat">
-                Zopakujte heslo
-            </label>
-
-            <div class="password-wrapper">
-
-                <input
-                    type="password"
-                    id="passwordRepeat"
-                    placeholder="Zopakujte heslo"
-                    autocomplete="new-password"
-                    minlength="6"
-                    required
-                >
-
-                <button
-                    type="button"
-                    class="show-password"
-                    onclick="togglePassword('passwordRepeat')"
-                    aria-label="Zobraziť heslo"
-                >
-                    👁️
-                </button>
-
-            </div>
-
-        </div>
-
-
-        <button
-            type="submit"
-            class="register-button"
-        >
-            Vytvoriť účet
-        </button>
-
-    </form>
-
-
-    <div class="login-link">
-
-        Už máte účet?
-
-        <a href="login.html">
-            Prihlásiť sa
-        </a>
-
-    </div>
-
-
-    <a href="index.html" class="back">
-        ← Späť na úvod
-    </a>
-
-</div>
-
-
-<footer>
-    © 2026 Kto ide so psom?
-</footer>
-
-</div><script>
-
-    function togglePassword(id) {
-
-        const input = document.getElementById(id);
-
-        if (!input) {
-            return;
-        }
-
-        if (input.type === "password") {
-
-            input.type = "text";
-
-        } else {
-
-            input.type = "password";
-
-        }
-
-    }
-
-</script><script
-    type="module"
-    src="auth.js"
-></script></body>
+            createUserWithEmailAndPassword(auth, email, password)
+                .then(() => {
+                    window.location.href = "index.html";
+                })
+                .catch((error) => {
+                    errorMessage.textContent = "Chyba pri registrácii: " + error.message;
+                });
+        });
+    </script>
+</body>
 </html>
