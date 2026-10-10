@@ -10,17 +10,21 @@
     <div class="max-w-xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6">
         <!-- Hlavička s odhlásením -->
         <div class="flex justify-between items-center mb-4">
-            <h1 class="text-2xl font-bold text-gray-800">🐕 Kto ide so psom?</h1>
+            <h1 class="text-2xl font-bold text-gray-800">🐕 Moje venčenia a psy</h1>
             <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded transition">Odhlásiť sa</button>
         </div>
         
-        <div class="flex justify-between items-center mb-6 text-xs text-gray-500">
-            <span id="userEmailDisplay">Prihlásený ako: Načítavam...</span>
-            <label class="flex items-center gap-1 cursor-pointer">
-                <input type="checkbox" id="filterMyWalks" class="rounded"> Zobraziť iba moje venčenia
-            </label>
+        <div class="flex justify-between items-center mb-6 text-xs text-gray-500 bg-gray-50 p-3 rounded-lg border">
+            <div>
+                <span id="userEmailDisplay" class="block font-semibold text-gray-700">Prihlásený: Načítavam...</span>
+                <span id="detectedNameDisplay" class="text-indigo-600 font-bold"></span>
+            </div>
+            <button id="toggleFilterBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-1.5 rounded transition">
+                Zobraziť iba moje psy/termíny
+            </button>
         </div>
 
+        <h2 id="sectionTitle" class="text-lg font-semibold text-gray-800 mb-3">Všetky naplánované venčenia</h2>
         <div id="publicWalksList" class="space-y-3">
             <p class="text-gray-500 text-center">Načítavam rozpis...</p>
         </div>
@@ -48,31 +52,46 @@
         const db = getDatabase(app);
 
         let currentUserEmail = "";
+        let showOnlyMine = false; // Predvolene ukáže všetko, prepínačom sa filtruje
+        let allWalksData = null;
 
-        // Kontrola prihlásenia
         onAuthStateChanged(auth, (user) => {
             if (!user) {
                 window.location.href = "login.html";
             } else {
                 currentUserEmail = user.email;
-                document.getElementById('userEmailDisplay').textContent = `Prihlásený: ${currentUserEmail}`;
-                loadWalks(); // Načítaj dáta až po zistení používateľa
+                document.getElementById('userEmailDisplay').textContent = `E-mail: ${currentUserEmail}`;
+                
+                // Odhadneme meno z e-mailu (napr. andrej@... -> andrej, jarko.novak@... -> jarko)
+                const inferredName = currentUserEmail.split('@')[0].replace(/[._-]/g, ' ').toLowerCase();
+                document.getElementById('detectedNameDisplay').textContent = `Hľadané meno: ${inferredName}`;
+                
+                loadWalks();
             }
         });
 
-        // Odhlásenie
         document.getElementById('logoutBtn').addEventListener('click', () => {
             signOut(auth).then(() => {
                 window.location.href = "login.html";
             });
         });
 
+        const toggleFilterBtn = document.getElementById('toggleFilterBtn');
+        toggleFilterBtn.addEventListener('click', () => {
+            showOnlyMine = !showOnlyMine;
+            if (showOnlyMine) {
+                toggleFilterBtn.textContent = "Zobraziť všetky venčenia";
+                toggleFilterBtn.className = "bg-gray-600 hover:bg-gray-700 text-white text-xs px-3 py-1.5 rounded transition";
+                document.getElementById('sectionTitle').textContent = "Moje priradené psy a termíny";
+            } else {
+                toggleFilterBtn.textContent = "Zobraziť iba moje psy/termíny";
+                toggleFilterBtn.className = "bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-1.5 rounded transition";
+                document.getElementById('sectionTitle').textContent = "Všetko naplánované";
+            }
+            renderWalks();
+        });
+
         const publicWalksList = document.getElementById('publicWalksList');
-        const filterCheckbox = document.getElementById('filterMyWalks');
-
-        filterCheckbox.addEventListener('change', loadWalks);
-
-        let allWalksData = null;
 
         function loadWalks() {
             onValue(ref(db, 'walks'), (snapshot) => {
@@ -90,33 +109,26 @@
                 return;
             }
 
-            const onlyMine = filterCheckbox.checked;
-
-            // Zistenie mena na základe e-mailu alebo predvolene pre Jaroslava/Jarka
-            let searchNames = [];
-            if (currentUserEmail.toLowerCase().includes("jaroslav") || currentUserEmail.toLowerCase().includes("jarko")) {
-                searchNames = ["jaroslav", "jarko"];
-            } else {
-                // Skúsime vyťažiť meno z e-mailu pred zavináčom (napr. "jarko.novak@gmail.com" -> "jarko")
-                const emailName = currentUserEmail.split('@')[0].toLowerCase();
-                searchNames = [emailName];
-            }
+            // Získame časti mena z e-mailu pre flexibilné porovnávanie (napr. Andrej, Jarko, Jaroslav)
+            const emailPrefix = currentUserEmail.split('@')[0].toLowerCase();
+            const nameKeywords = emailPrefix.split(/[._-]/); // rozdelí napr. "jarko.novak" na ["jarko", "novak"]
 
             let walksArray = Object.keys(data).map(key => ({
                 id: key,
                 ...data[key]
             })).sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
 
-            // Filtrovanie, ak je začiarknuté "Zobraziť iba moje venčenia"
-            if (onlyMine) {
+            // Ak je zapnutý filter na "iba moje", filtrujeme podľa mena v databáze (stĺpec person)
+            if (showOnlyMine) {
                 walksArray = walksArray.filter(walk => {
-                    const personLower = walk.person.toLowerCase();
-                    return searchNames.some(name => personLower.includes(name));
+                    const personInDb = walk.person.toLowerCase();
+                    // Skontroluje, či niektoré kľúčové slovo z e-mailu sedí s menom v databáze (alebo naopak)
+                    return nameKeywords.some(keyword => keyword.length > 2 && personInDb.includes(keyword));
                 });
             }
 
             if (walksArray.length === 0) {
-                publicWalksList.innerHTML = '<p class="text-gray-500 text-center">Žiadne tvoje venčenia sa nenašli.</p>';
+                publicWalksList.innerHTML = '<p class="text-gray-500 text-center">Žiadne priradené venčenia pre tvoj účet sa nenašli.</p>';
                 return;
             }
 
@@ -164,7 +176,7 @@
                 item.innerHTML = `
                     <div>
                         <div class="text-xs font-semibold text-indigo-600 uppercase tracking-wide">${dateFormatted}</div>
-                        <div class="text-lg font-bold text-gray-800">${walk.person} + ${walk.dog}</div>
+                        <div class="text-lg font-bold text-gray-800">👤 ${walk.person} ➔ 🐕 <span class="text-indigo-700">${walk.dog}</span></div>
                     </div>
                     ${actionHtml}
                 `;
