@@ -8,7 +8,7 @@
 </head>
 <body class="bg-gray-100 min-h-screen p-6">
     <div class="max-w-xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6">
-        <h1 class="text-2xl font-bold text-gray-800 mb-6">🐾 Admin: Kto ide so psom</h1>
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">🐾 Admin: Správa venčení a suplovania</h1>
         
         <!-- Formulár na pridanie venčenia -->
         <form id="dogForm" class="space-y-4 mb-8">
@@ -18,7 +18,7 @@
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700">Meno venčiara (Kto?)</label>
-                <input type="text" id="personName" placeholder="napr. Jano" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <input type="text" id="personName" placeholder="napr. Janko" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 focus:ring-indigo-500 focus:border-indigo-500">
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700">Meno psa (So psom?)</label>
@@ -34,7 +34,7 @@
         <hr class="my-6">
 
         <!-- Zoznam naplánovaných venčení -->
-        <h2 class="text-xl font-semibold text-gray-800 mb-4">Aktuálny rozpis a stavy</h2>
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Aktuálny rozpis (Oprava a Úpravy Adminom)</h2>
         <div id="adminWalksList" class="space-y-4">
             <p class="text-gray-500 text-sm">Načítavam dáta...</p>
         </div>
@@ -74,8 +74,9 @@
                 dateTime: dateTime,
                 person: person,
                 dog: dog,
-                status: 'ok', // ok, need_sub, substituted, late
+                status: 'ok', // ok, substituted, late
                 substitute: '',
+                lateTime: '',
                 createdAt: Date.now()
             }).then(() => {
                 statusMessage.textContent = "Záznam úspešne pridaný!";
@@ -107,81 +108,89 @@
                     weekday: 'short', year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
                 });
                 
-                let subSection = '';
+                let statusControlHtml = '';
 
-                if (walk.status === 'need_sub') {
-                    subSection = `
-                        <div class="mt-2 pt-2 border-t border-amber-200 bg-amber-50 p-2 rounded">
-                            <span class="text-xs font-bold text-amber-800 block mb-1">⚠️ Hľadať suplovanie</span>
-                            <div class="flex gap-2 items-center">
-                                <input type="text" id="adminSub-${walk.id}" placeholder="Meno suplujúceho" class="text-xs p-1.5 border rounded w-full">
-                                <button onclick="adminTakeSub('${walk.id}')" class="bg-amber-600 hover:bg-amber-700 text-white text-xs px-3 py-1.5 rounded font-medium whitespace-nowrap">Priradiť suplu</button>
-                            </div>
-                        </div>
-                    `;
-                } else if (walk.status === 'substituted') {
-                    subSection = `
-                        <div class="mt-2 pt-2 border-t border-green-200 bg-green-50 p-2 rounded flex justify-between items-center">
-                            <span class="text-xs text-green-800 font-medium">✓ Supluje: <b>${walk.substitute}</b></span>
-                            <button onclick="adminResetStatus('${walk.id}')" class="text-xs text-red-600 hover:underline">Zrušiť stav</button>
+                if (walk.status === 'substituted') {
+                    statusControlHtml = `
+                        <div class="mt-2 pt-2 border-t border-green-200 bg-green-50 p-2.5 rounded flex justify-between items-center">
+                            <span class="text-xs text-green-800 font-medium">✓ Supluje: <b>${walk.substitute}</b> (pôvodne ${walk.person})</span>
+                            <button onclick="adminResetStatus('${walk.id}')" class="text-xs text-red-600 hover:underline font-semibold">Zrušiť / Opraviť suplovanie</button>
                         </div>
                     `;
                 } else if (walk.status === 'late') {
-                    subSection = `
-                        <div class="mt-2 pt-2 border-t border-purple-200 bg-purple-50 p-2 rounded flex justify-between items-center">
-                            <span class="text-xs text-purple-800 font-medium">⏰ Príde trošku neskôr</span>
-                            <button onclick="adminResetStatus('${walk.id}')" class="text-xs text-red-600 hover:underline">Zrušiť stav</button>
+                    statusControlHtml = `
+                        <div class="mt-2 pt-2 border-t border-purple-200 bg-purple-50 p-2.5 rounded flex justify-between items-center">
+                            <span class="text-xs text-purple-800 font-medium">⏰ Príde neskôr: <b>${walk.lateTime}</b></span>
+                            <button onclick="adminResetStatus('${walk.id}')" class="text-xs text-red-600 hover:underline font-semibold">Zrušiť meškanie</button>
                         </div>
                     `;
                 } else {
-                    // Všetko OK - rozbalenie možností
-                    subSection = `
-                        <div class="mt-2 pt-2 border-t border-gray-100 flex flex-wrap gap-2 items-center justify-between">
-                            <span class="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded font-medium">Všetko OK</span>
-                            <div class="flex gap-1">
-                                <button onclick="adminNeedSub('${walk.id}')" class="text-xs bg-amber-100 hover:bg-amber-200 text-amber-800 px-2 py-1 rounded transition">Suplovanie</button>
-                                <button onclick="adminLate('${walk.id}')" class="text-xs bg-purple-100 hover:bg-purple-200 text-purple-800 px-2 py-1 rounded transition">Príde neskôr</button>
+                    // Možnosti úpravy pre Admina
+                    statusControlHtml = `
+                        <div class="mt-2 pt-2 border-t border-gray-100 flex flex-col gap-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded font-medium">Stav: Všetko OK</span>
+                                <div class="flex gap-1">
+                                    <button onclick="toggleBox('${walk.id}', 'sub')" class="text-xs bg-amber-100 hover:bg-amber-200 text-amber-800 px-2.5 py-1 rounded transition">Priradiť suplu</button>
+                                    <button onclick="toggleBox('${walk.id}', 'late')" class="text-xs bg-purple-100 hover:bg-purple-200 text-purple-800 px-2.5 py-1 rounded transition">Príde neskôr</button>
+                                </div>
+                            </div>
+                            
+                            <!-- Admin input pre Suplovanie -->
+                            <div id="subBox-${walk.id}" class="hidden flex gap-2 items-center mt-1">
+                                <input type="text" id="adminSubInput-${walk.id}" placeholder="Meno suplujúceho (napr. Andrej)" class="text-xs p-1.5 border rounded w-full">
+                                <button onclick="adminSaveSub('${walk.id}')" class="bg-amber-600 hover:bg-amber-700 text-white text-xs px-3 py-1.5 rounded font-medium whitespace-nowrap">Uložiť suplu</button>
+                            </div>
+
+                            <!-- Admin input pre Meškanie -->
+                            <div id="lateBox-${walk.id}" class="hidden flex gap-2 items-center mt-1">
+                                <input type="text" id="adminLateInput-${walk.id}" placeholder="Napr. o 15 min / o 17:30" class="text-xs p-1.5 border rounded w-full">
+                                <button onclick="adminSaveLate('${walk.id}')" class="bg-purple-600 hover:bg-purple-700 text-white text-xs px-3 py-1.5 rounded font-medium whitespace-nowrap">Uložiť čas</button>
                             </div>
                         </div>
                     `;
                 }
 
                 const item = document.createElement('div');
-                item.className = "bg-gray-50 p-3.5 rounded-lg border flex flex-col gap-1";
+                item.className = "bg-gray-50 p-4 rounded-lg border flex flex-col gap-1";
                 item.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div>
                             <div class="text-xs text-indigo-600 font-semibold">${dateFormatted}</div>
-                            <div class="text-base font-bold text-gray-800">${walk.person} + ${walk.dog}</div>
+                            <div class="text-base font-bold text-gray-800">👤 ${walk.person} ➔ 🐕 <span class="text-indigo-700">${walk.dog}</span></div>
                         </div>
-                        <button onclick="deleteWalk('${walk.id}')" class="bg-red-500 text-white text-xs px-2.5 py-1 rounded hover:bg-red-600 transition">Zmazať</button>
+                        <button onclick="deleteWalk('${walk.id}')" class="bg-red-500 text-white text-xs px-2.5 py-1.5 rounded hover:bg-red-600 transition">Zmazať</button>
                     </div>
-                    ${subSection}
+                    ${statusControlHtml}
                 `;
                 walksList.appendChild(item);
             });
         });
 
-        // Ovládacie funkcie pre admina
+        // Pomocné admin funkcie
         window.deleteWalk = function(id) {
-            if (confirm("Naozaj chceš vymazať tento záznam?")) {
+            if (confirm("Naozaj chceš vymazať tento záznam z databázy?")) {
                 remove(ref(db, 'walks/' + id));
             }
         }
 
-        window.adminNeedSub = function(id) {
-            update(ref(db, 'walks/' + id), { status: 'need_sub' });
+        window.toggleBox = function(id, type) {
+            const subBox = document.getElementById(`subBox-${id}`);
+            const lateBox = document.getElementById(`lateBox-${id}`);
+            
+            if (type === 'sub') {
+                subBox.classList.toggle('hidden');
+                lateBox.classList.add('hidden');
+            } else {
+                lateBox.classList.toggle('hidden');
+                subBox.classList.add('hidden');
+            }
         }
 
-        window.adminLate = function(id) {
-            update(ref(db, 'walks/' + id), { status: 'late' });
-        }
-
-        window.adminTakeSub = function(id) {
-            const input = document.getElementById(`adminSub-${id}`);
-            const name = input.value.trim();
+        window.adminSaveSub = function(id) {
+            const name = document.getElementById(`adminSubInput-${id}`).value.trim();
             if (!name) {
-                alert("Zadaj meno, kto ide suplovať.");
+                alert("Zadaj meno človeka, ktorý má suplovať.");
                 return;
             }
             update(ref(db, 'walks/' + id), {
@@ -190,11 +199,26 @@
             });
         }
 
-        window.adminResetStatus = function(id) {
+        window.adminSaveLate = function(id) {
+            const timeVal = document.getElementById(`adminLateInput-${id}`).value.trim();
+            if (!timeVal) {
+                alert("Zadaj čas meškania.");
+                return;
+            }
             update(ref(db, 'walks/' + id), {
-                status: 'ok',
-                substitute: ''
+                status: 'late',
+                lateTime: timeVal
             });
+        }
+
+        window.adminResetStatus = function(id) {
+            if (confirm("Chceš zrušiť suplovanie / meškanie a vrátiť záznam do pôvodného stavu?")) {
+                update(ref(db, 'walks/' + id), {
+                    status: 'ok',
+                    substitute: '',
+                    lateTime: ''
+                });
+            }
         }
     </script>
 </body>
