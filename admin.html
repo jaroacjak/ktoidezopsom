@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Kto ide so psom</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-6">
+    <div class="max-w-xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">🐾 Admin: Kto ide so psom</h1>
+        
+        <!-- Formulár -->
+        <form id="dogForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Dátum a čas venčenia</label>
+                <input type="datetime-local" id="dateTime" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Meno venčiara (Kto?)</label>
+                <input type="text" id="personName" placeholder="napr. Jano" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Meno psa (So psom?)</label>
+                <input type="text" id="dogName" placeholder="napr. Rex" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 transition">
+                Pridať záznam
+            </button>
+        </form>
+
+        <div id="statusMessage" class="mt-4 text-center text-sm font-medium"></div>
+
+        <hr class="my-8">
+
+        <!-- Zoznam naplánovaných venčení s možnosťou vymazania -->
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Aktuálny rozpis</h2>
+        <div id="adminWalksList" class="space-y-2">
+            <!-- Sem sa načítajú dáta -->
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBiXQt7bHPI15wp4krGq-GwPz7BfsSvaEE",
+            authDomain: "ktoidezopsom.firebaseapp.com",
+            databaseURL: "https://ktoidezopsom-default-rtdb.firebaseio.com",
+            projectId: "ktoidezopsom",
+            storageBucket: "ktoidezopsom.firebasestorage.app",
+            messagingSenderId: "354613832067",
+            appId: "1:354613832067:web:ddf12b03ed6b4a61d8aeb6",
+            measurementId: "G-Z8YC2L3RK7"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        const form = document.getElementById('dogForm');
+        const statusMessage = document.getElementById('statusMessage');
+        const walksList = document.getElementById('adminWalksList');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const dateTime = document.getElementById('dateTime').value;
+            const person = document.getElementById('personName').value;
+            const dog = document.getElementById('dogName').value;
+
+            push(ref(db, 'walks'), {
+                dateTime: dateTime,
+                person: person,
+                dog: dog,
+                createdAt: Date.now()
+            }).then(() => {
+                statusMessage.textContent = "Záznam úspešne pridaný!";
+                statusMessage.className = "mt-4 text-center text-sm font-medium text-green-600";
+                form.reset();
+                setTimeout(() => statusMessage.textContent = "", 3000);
+            }).catch((error) => {
+                statusMessage.textContent = "Chyba: " + error.message;
+                statusMessage.className = "mt-4 text-center text-sm font-medium text-red-600";
+            });
+        });
+
+        // Načítanie a zobrazenie pre admina (s tlačidlom zmazať)
+        onValue(ref(db, 'walks'), (snapshot) => {
+            walksList.innerHTML = '';
+            const data = snapshot.val();
+            if (!data) {
+                walksList.innerHTML = '<p class="text-gray-500 text-sm">Žiadne naplánované venčenia.</p>';
+                return;
+            }
+
+            Object.keys(data).forEach((key) => {
+                const walk = data[key];
+                const dateFormatted = new Date(walk.dateTime).toLocaleString('sk-SK');
+                
+                const item = document.createElement('div');
+                item.className = "flex justify-between items-center bg-gray-50 p-3 rounded-lg border";
+                item.innerHTML = `
+                    <div>
+                        <span class="font-bold text-gray-800">${walk.person}</span> ide so psom <span class="text-indigo-600 font-semibold">${walk.dog}</span>
+                        <div class="text-xs text-gray-500">${dateFormatted}</div>
+                    </div>
+                    <button onclick="deleteWalk('${key}')" class="bg-red-500 text-white text-xs px-3 py-1.5 rounded hover:bg-red-600 transition">Zmazať</button>
+                `;
+                walksList.appendChild(item);
+            });
+        });
+
+        window.deleteWalk = function(id) {
+            if (confirm("Naozaj chceš vymazať tento záznam?")) {
+                remove(ref(db, 'walks/' + id));
+            }
+        }
+    </script>
+</body>
+</html>
