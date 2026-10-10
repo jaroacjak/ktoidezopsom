@@ -10,7 +10,7 @@
     <div class="max-w-xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6">
         <!-- Hlavička s odhlásením -->
         <div class="flex justify-between items-center mb-4">
-            <h1 class="text-2xl font-bold text-gray-800">🐕 Moje priradené venčenia</h1>
+            <h1 class="text-2xl font-bold text-gray-800">🐕 Moje aktívne venčenia</h1>
             <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded transition">Odhlásiť sa</button>
         </div>
         
@@ -56,9 +56,8 @@
                 currentUserEmail = user.email.toLowerCase();
                 document.getElementById('userEmailDisplay').textContent = `E-mail: ${user.email}`;
                 
-                // Určenie, aké mená v databáze patria tomuto používateľovi
                 let targetNames = getTargetNames(currentUserEmail);
-                document.getElementById('mappedNameDisplay').textContent = `Zobrazené pre mená: ${targetNames.join(', ')}`;
+                document.getElementById('mappedNameDisplay').textContent = `Zobrazené pre: ${targetNames.join(', ')}`;
                 
                 loadWalks(targetNames);
             }
@@ -70,14 +69,12 @@
             });
         });
 
-        // Mapovanie e-mailov na mená v databáze (sem si môžeš dopísať ďalších ľudí)
         function getTargetNames(email) {
             if (email.includes("jarko") || email.includes("jaroslav")) {
-                return ["jarko", "jaroslav"]; // Ak e-mail obsahuje jarko alebo jaroslav, vyhľadá oboje
+                return ["jarko", "jaroslav"];
             } else if (email.includes("andrej")) {
                 return ["andrej"];
             } else {
-                // Ak sa nenájde špeciálna zhoda, vezme text pred zavináčom ako meno
                 const defaultName = email.split('@')[0];
                 return [defaultName];
             }
@@ -100,14 +97,18 @@
                     ...data[key]
                 })).sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
 
-                // FILTROVANIE: Zoberieme iba tie, kde meno v databáze zodpovedá prihlásenému používateľovi
+                // 1. Vyfiltrujeme iba venčenia tohto používateľa
                 walksArray = walksArray.filter(walk => {
                     const personInDb = walk.person.toLowerCase();
                     return targetNames.some(name => personInDb.includes(name));
                 });
 
+                // 2. ODSTRÁNENIE ZO ZOZNAMU: Ak je stav 'substituted' (teda za neho už niekto zaskočil/supluje), 
+                // tak sa mu toto venčenie v jeho zozname nezobrazí.
+                walksArray = walksArray.filter(walk => walk.status !== 'substituted');
+
                 if (walksArray.length === 0) {
-                    publicWalksList.innerHTML = '<p class="text-gray-500 text-center">Nemáš priradené žiadne venčenia.</p>';
+                    publicWalksList.innerHTML = '<p class="text-gray-500 text-center">Nemáš žiadne aktívne venčenia (všetky sú buď ošetrené alebo žiadne nemáš).</p>';
                     return;
                 }
 
@@ -122,26 +123,19 @@
                     if (walk.status === 'need_sub') {
                         cardBg = 'bg-amber-50 border-amber-200';
                         actionHtml = `
-                            <div class="mt-2 pt-2 border-t border-amber-200 flex gap-2 items-center text-xs text-amber-800 font-medium">
-                                ⚠️ Pre tento termín hľadáš suplovanie.
-                            </div>
-                        `;
-                    } else if (walk.status === 'substituted') {
-                        cardBg = 'bg-green-50 border-green-200';
-                        actionHtml = `
-                            <div class="mt-2 text-xs text-green-700 font-medium">
-                                ✓ Tento termín za teba supluje: <span class="font-bold">${walk.substitute}</span>
+                            <div class="mt-2 pt-2 border-t border-amber-200 text-xs text-amber-800 font-medium">
+                                ⚠️ Pre tento termín aktuálne hľadáš suplovanie. Čaká sa, kým niekto zaskočí.
                             </div>
                         `;
                     } else if (walk.status === 'late') {
                         cardBg = 'bg-purple-50 border-purple-200';
                         actionHtml = `
-                            <div class="mt-2 text-xs text-purple-700 font-medium">
-                                ⏰ Oznámené meškanie: <span class="font-bold">${walk.lateTime}</span>
+                            <div class="mt-2 text-xs text-purple-700 font-medium flex justify-between items-center">
+                                <span>⏰ Oznámené meškanie: <b>${walk.lateTime}</b></span>
+                                <button onclick="requestSubstitute('${walk.id}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs px-2.5 py-1 rounded transition">Nemôžem ísť (Suplovanie)</button>
                             </div>
                         `;
                     } else {
-                        // Ak nemôže ísť, môže kliknúť na hľadanie suplovania
                         actionHtml = `
                             <div class="mt-2 pt-2 border-t border-indigo-100 flex justify-end">
                                 <button onclick="requestSubstitute('${walk.id}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs px-3 py-1.5 rounded transition font-medium">Nemôžem ísť (Hľadať suplu)</button>
