@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moje venčenia - Kto ide so psom</title>
+    <title>Rozpis venčení - Kto ide so psom</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen p-6">
     <div class="max-w-xl mx-auto space-y-6">
         
-        <!-- HLAVNÁ KARTA: Moje priradené venčenia a suplovania -->
+        <!-- HLAVNÁ KARTA: Rozpis venčení pre vybraný deň -->
         <div class="bg-white rounded-xl shadow-md overflow-hidden p-6">
             <!-- Hlavička s odhlásením -->
             <div class="flex justify-between items-center mb-4">
-                <h1 class="text-2xl font-bold text-gray-800">🐕 Moje venčenia</h1>
+                <h1 class="text-2xl font-bold text-gray-800">🐕 Rozpis venčení</h1>
                 <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded transition">Odhlásiť sa</button>
             </div>
             
@@ -27,13 +27,16 @@
             <!-- VÝBER DÁTUMU (Kalendár) -->
             <div class="mb-6 bg-indigo-50 border border-indigo-100 p-3.5 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-3">
                 <label for="datePicker" class="text-xs font-bold text-indigo-900 uppercase tracking-wide">
-                    📅 Vyber dátum venčenia:
+                    📅 Dátum venčenia:
                 </label>
-                <input type="date" id="datePicker" class="text-sm font-semibold p-2 border rounded-md bg-white shadow-sm focus:ring-2 focus:ring-indigo-500 text-gray-800">
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <input type="date" id="datePicker" class="text-sm font-semibold p-2 border rounded-md bg-white shadow-sm focus:ring-2 focus:ring-indigo-500 text-gray-800 w-full">
+                    <button id="todayBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-2 rounded font-medium transition">Dnes</button>
+                </div>
             </div>
 
             <div id="myWalksList" class="space-y-3">
-                <p class="text-gray-500 text-center">Načítavam tvoje venčenia...</p>
+                <p class="text-gray-500 text-center">Načítavam rozpis...</p>
             </div>
         </div>
 
@@ -62,13 +65,17 @@
 
         let currentUserEmail = "";
         const datePicker = document.getElementById('datePicker');
+        const todayBtn = document.getElementById('todayBtn');
 
-        // Nastavíme výber dátumu automaticky na dnešný deň YYYY-MM-DD
-        const today = new Date();
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const dd = String(today.getDate()).padStart(2, '0');
-        datePicker.value = `${yyyy}-${mm}-${dd}`;
+        // Nastavenie dnešného dátumu
+        function setTodayDate() {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            datePicker.value = `${yyyy}-${mm}-${dd}`;
+        }
+        setTodayDate();
 
         onAuthStateChanged(auth, (user) => {
             if (!user) {
@@ -81,6 +88,14 @@
                 document.getElementById('mappedNameDisplay').textContent = `Meno v systéme: ${targetNames.join(', ')}`;
                 
                 loadWalks(targetNames);
+            }
+        });
+
+        // Tlačidlo Prejsť na dnešok
+        todayBtn.addEventListener('click', () => {
+            setTodayDate();
+            if (currentUserEmail) {
+                loadWalks(getTargetNames(currentUserEmail));
             }
         });
 
@@ -117,56 +132,44 @@
                 const data = snapshot.val();
                 
                 if (!data) {
-                    myWalksList.innerHTML = '<p class="text-gray-500 text-center">Zatiaľ nie je naplánované žiadne venčenie.</p>';
+                    myWalksList.innerHTML = '<p class="text-gray-500 text-center py-4">Zatiaľ nie je naplánované žiadne venčenie.</p>';
                     return;
                 }
 
-                const selectedDateStr = datePicker.value; // Získame vybraný dátum napr. "2026-10-11"
+                const selectedDateStr = datePicker.value;
 
                 let allWalks = Object.keys(data).map(key => ({
                     id: key,
                     ...data[key]
                 })).sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
 
-                // 1. FILTROVANIE PODĽA VYBRANÉHO DÁTUMU
+                // FILTROVANIE VŠETKÝCH VENČENÍ PRE DANNÝ DÁTUM
                 const dateFilteredWalks = allWalks.filter(walk => {
                     if (!walk.dateTime) return false;
-                    // Porovnáme prvých 10 znakov "YYYY-MM-DD"
                     const walkDateStr = walk.dateTime.substring(0, 10);
                     return walkDateStr === selectedDateStr;
                 });
 
-                // 2. FILTROVANIE PODĽA POUŽÍVATEĽA / SUPLOVANIA
-                const relevantWalks = dateFilteredWalks.filter(walk => {
-                    const personInDb = (walk.person || '').toLowerCase();
-                    const subInDb = (walk.substitute || '').toLowerCase();
-
-                    const isMyOriginal = targetNames.some(name => personInDb.includes(name));
-                    const isMySubstitution = targetNames.some(name => subInDb.includes(name));
-
-                    if (walk.status === 'substituted') {
-                        return isMySubstitution;
-                    }
-
-                    return isMyOriginal;
-                });
-
-                if (relevantWalks.length === 0) {
-                    myWalksList.innerHTML = `<p class="text-gray-500 text-center py-4">Pre vybraný dátum (<b>${selectedDateStr}</b>) nemáš žiadne naplánované venčenia.</p>`;
+                if (dateFilteredWalks.length === 0) {
+                    myWalksList.innerHTML = `<p class="text-gray-500 text-center py-4">Pre vybraný dátum (<b>${selectedDateStr}</b>) nie sú naplánované žiadne venčenia.</p>`;
                 } else {
-                    relevantWalks.forEach((walk) => {
+                    dateFilteredWalks.forEach((walk) => {
                         const dateFormatted = new Date(walk.dateTime).toLocaleString('sk-SK', {
-                            weekday: 'short', year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                            hour: '2-digit', minute: '2-digit'
                         });
+
+                        const personInDb = (walk.person || '').toLowerCase();
+                        const isMyWalk = targetNames.some(name => personInDb.includes(name));
 
                         let actionHtml = '';
                         let cardBg = 'bg-indigo-50 border-indigo-100';
 
+                        // AK VENČENIE NIEKTO SUPLUJE (Zobrazí sa informácia o suplujúcom namiesto pôvodného)
                         if (walk.status === 'substituted') {
                             cardBg = 'bg-emerald-50 border-emerald-300';
                             actionHtml = `
                                 <div class="mt-2 text-xs text-emerald-800 font-bold bg-emerald-100 p-2.5 rounded border border-emerald-200">
-                                    🤝 TOTO VENČENIE SUPLUJEŠ TI (za: ${walk.person})
+                                    🤝 Supluje: <span class="text-emerald-900 font-extrabold text-sm">${walk.substitute}</span> (pôvodne: ${walk.person})
                                 </div>
                             `;
                         } else if (walk.status === 'late') {
@@ -176,12 +179,13 @@
                                     ⏰ Oznámené meškanie: <b>${walk.lateTime}</b>
                                 </div>
                             `;
-                        } else {
+                        } else if (isMyWalk) {
+                            // AK JE TO MOJE VENČENIE, MÔŽEM K NEHO PRIRADIŤ SUPLOVANIE
                             actionHtml = `
                                 <div class="mt-3 pt-3 border-t border-indigo-100">
-                                    <label class="block text-xs font-semibold text-gray-600 mb-1">Nemôžem ísť so psom? Priraď suplovanie:</label>
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1">Nemôžeš ísť? Priraď suplovanie:</label>
                                     <div class="flex gap-2 items-center">
-                                        <input type="text" id="subInput-${walk.id}" placeholder="Napr. Andrej" class="text-xs p-2 border rounded w-full focus:ring-indigo-500 focus:border-indigo-500">
+                                        <input type="text" id="subInput-${walk.id}" placeholder="Meno (napr. Andrej)" class="text-xs p-2 border rounded w-full focus:ring-indigo-500 focus:border-indigo-500">
                                         <button onclick="assignSubstitute('${walk.id}')" class="bg-amber-600 hover:bg-amber-700 text-white text-xs px-3 py-2 rounded font-medium whitespace-nowrap transition">
                                             Zaskočí za mňa
                                         </button>
@@ -194,8 +198,11 @@
                         item.className = `${cardBg} border p-4 rounded-lg shadow-sm flex flex-col justify-between`;
                         item.innerHTML = `
                             <div>
-                                <div class="text-xs font-semibold text-indigo-600 uppercase tracking-wide">${dateFormatted}</div>
-                                <div class="text-lg font-bold text-gray-800">🐕 Pes: <span class="text-indigo-700">${walk.dog}</span></div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-xs font-bold text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded">⏰ ${dateFormatted}</span>
+                                    <span class="text-xs text-gray-500 font-medium">Venčiar: <b>${walk.person}</b></span>
+                                </div>
+                                <div class="text-lg font-bold text-gray-800 mt-1">🐕 Pes: <span class="text-indigo-700">${walk.dog}</span></div>
                             </div>
                             ${actionHtml}
                         `;
@@ -211,7 +218,7 @@
             const substituteName = input.value.trim();
             
             if (!substituteName) {
-                alert("Prosím, napíš meno človeka, ktorý za teba zaskočí (napr. Andrej).");
+                alert("Prosím, napíš meno človeka, ktorý za teba zaskočí.");
                 return;
             }
 
