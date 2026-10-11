@@ -17,11 +17,19 @@
                 <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded transition">Odhlásiť sa</button>
             </div>
             
-            <div class="mb-6 text-xs text-gray-500 bg-gray-50 p-3 rounded-lg border flex justify-between items-center">
+            <div class="mb-4 text-xs text-gray-500 bg-gray-50 p-3 rounded-lg border flex justify-between items-center">
                 <div>
                     <span id="userEmailDisplay" class="block font-semibold text-gray-700">Prihlásený: Načítavam...</span>
                     <span id="mappedNameDisplay" class="text-indigo-600 font-bold"></span>
                 </div>
+            </div>
+
+            <!-- VÝBER DÁTUMU (Kalendár) -->
+            <div class="mb-6 bg-indigo-50 border border-indigo-100 p-3.5 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-3">
+                <label for="datePicker" class="text-xs font-bold text-indigo-900 uppercase tracking-wide">
+                    📅 Vyber dátum venčenia:
+                </label>
+                <input type="date" id="datePicker" class="text-sm font-semibold p-2 border rounded-md bg-white shadow-sm focus:ring-2 focus:ring-indigo-500 text-gray-800">
             </div>
 
             <div id="myWalksList" class="space-y-3">
@@ -53,6 +61,14 @@
         const db = getDatabase(app);
 
         let currentUserEmail = "";
+        const datePicker = document.getElementById('datePicker');
+
+        // Nastavíme výber dátumu automaticky na dnešný deň YYYY-MM-DD
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        datePicker.value = `${yyyy}-${mm}-${dd}`;
 
         onAuthStateChanged(auth, (user) => {
             if (!user) {
@@ -65,6 +81,13 @@
                 document.getElementById('mappedNameDisplay').textContent = `Meno v systéme: ${targetNames.join(', ')}`;
                 
                 loadWalks(targetNames);
+            }
+        });
+
+        // Reakcia na zmenu dátumu v kalendári
+        datePicker.addEventListener('change', () => {
+            if (currentUserEmail) {
+                loadWalks(getTargetNames(currentUserEmail));
             }
         });
 
@@ -98,13 +121,23 @@
                     return;
                 }
 
+                const selectedDateStr = datePicker.value; // Získame vybraný dátum napr. "2026-10-11"
+
                 let allWalks = Object.keys(data).map(key => ({
                     id: key,
                     ...data[key]
-                })).sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime)); // Pevné zoradenie od najstaršieho po najnovší dátum
+                })).sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
 
-                // Filtrovanie pre relevantné venčenia
-                const relevantWalks = allWalks.filter(walk => {
+                // 1. FILTROVANIE PODĽA VYBRANÉHO DÁTUMU
+                const dateFilteredWalks = allWalks.filter(walk => {
+                    if (!walk.dateTime) return false;
+                    // Porovnáme prvých 10 znakov "YYYY-MM-DD"
+                    const walkDateStr = walk.dateTime.substring(0, 10);
+                    return walkDateStr === selectedDateStr;
+                });
+
+                // 2. FILTROVANIE PODĽA POUŽÍVATEĽA / SUPLOVANIA
+                const relevantWalks = dateFilteredWalks.filter(walk => {
                     const personInDb = (walk.person || '').toLowerCase();
                     const subInDb = (walk.substitute || '').toLowerCase();
 
@@ -119,7 +152,7 @@
                 });
 
                 if (relevantWalks.length === 0) {
-                    myWalksList.innerHTML = '<p class="text-gray-500 text-center">Nemáš priradené žiadne aktívne venčenia ani suplovania.</p>';
+                    myWalksList.innerHTML = `<p class="text-gray-500 text-center py-4">Pre vybraný dátum (<b>${selectedDateStr}</b>) nemáš žiadne naplánované venčenia.</p>`;
                 } else {
                     relevantWalks.forEach((walk) => {
                         const dateFormatted = new Date(walk.dateTime).toLocaleString('sk-SK', {
