@@ -64,6 +64,7 @@
         const db = getDatabase(app);
 
         let currentUserEmail = "";
+        let dbIdentities = {}; // Tu si uloženíme pravidlá z databázy
         const datePicker = document.getElementById('datePicker');
         const todayBtn = document.getElementById('todayBtn');
 
@@ -77,32 +78,42 @@
         }
         setTodayDate();
 
+        // Najskôr načítame pravidlá identifikácie z databázy, až potom sledujeme prihlásenie
+        onValue(ref(db, 'identities'), (snapshot) => {
+            dbIdentities = snapshot.val() || {};
+            if (currentUserEmail) {
+                checkAndLoadWalks();
+            }
+        });
+
         onAuthStateChanged(auth, (user) => {
             if (!user) {
                 window.location.href = "login.html";
             } else {
                 currentUserEmail = user.email.toLowerCase();
                 document.getElementById('userEmailDisplay').textContent = `E-mail: ${user.email}`;
-                
-                let targetNames = getTargetNames(currentUserEmail);
-                document.getElementById('mappedNameDisplay').textContent = `Meno v systéme: ${targetNames.join(', ')}`;
-                
-                loadWalks(targetNames);
+                checkAndLoadWalks();
             }
         });
+
+        function checkAndLoadWalks() {
+            let targetNames = getTargetNames(currentUserEmail, dbIdentities);
+            document.getElementById('mappedNameDisplay').textContent = `Meno v systéme: ${targetNames.join(', ')}`;
+            loadWalks(targetNames);
+        }
 
         // Tlačidlo Prejsť na dnešok
         todayBtn.addEventListener('click', () => {
             setTodayDate();
             if (currentUserEmail) {
-                loadWalks(getTargetNames(currentUserEmail));
+                checkAndLoadWalks();
             }
         });
 
         // Reakcia na zmenu dátumu v kalendári
         datePicker.addEventListener('change', () => {
             if (currentUserEmail) {
-                loadWalks(getTargetNames(currentUserEmail));
+                checkAndLoadWalks();
             }
         });
 
@@ -112,27 +123,36 @@
             });
         });
 
-        // POMOCNÁ FUNKCIA PRE PÁROVANIE (INDEXÁCIU) PODĽA EMAILU
-        function getTargetNames(email) {
+        // INTELIGENTNÉ PÁROVANIE PODĽA PRAVIDIDIEL Z DATABÁZY (RESP. VÝCHOZÍCH)
+        function getTargetNames(email, identities) {
             let names = [];
-            
-            if (email.includes("jarko") || email.includes("jaroslav")) {
-                names.push("jarko", "jaroslav");
-            }
-            if (email.includes("andrej")) {
-                names.push("andrej");
-            }
-            if (email.includes("acjak")) {
-                names.push("acjak");
+
+            // 1. Skúsime nájsť zhodu v pravidlách uložených adminom v databáze
+            for (let key in identities) {
+                const rule = identities[key];
+                if (rule.emailMatch && email.includes(rule.emailMatch.toLowerCase())) {
+                    if (Array.isArray(rule.mappedNames)) {
+                        names = names.concat(rule.mappedNames);
+                    }
+                }
             }
 
-            // Ak nič zo špeciálnych pravidiel nesedí, zoberie meno pred zavináčom
+            // 2. Ak v databáze nie je pravidlo, použijeme záložné predvolené
             if (names.length === 0) {
-                const prefix = email.split('@')[0];
-                names.push(prefix);
+                if (email.includes("jarko") || email.includes("jaroslav")) {
+                    names.push("jarko", "jaroslav");
+                } else if (email.includes("andrej")) {
+                    names.push("andrej");
+                } else if (email.includes("acjak")) {
+                    names.push("acjak");
+                } else {
+                    const defaultName = email.split('@')[0];
+                    names.push(defaultName);
+                }
             }
 
-            return names;
+            // Vráti unikátne názvy v malých písmenách
+            return [...new Set(names.map(n => n.toLowerCase()))];
         }
 
         const myWalksList = document.getElementById('myWalksList');
@@ -155,28 +175,26 @@
                     ...data[key]
                 })).sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
 
-                // 1. Filtrovanie podľa dátumu
+                // 1. Filtrovanie podľa vybraného dátumu
                 const dateFilteredWalks = allWalks.filter(walk => {
                     if (!walk.dateTime) return false;
                     return walk.dateTime.substring(0, 10) === selectedDateStr;
                 });
 
-                // 2. Filtrovanie podla priradenia / indexácie
+                // 2. Filtrovanie podľa priradenia / indexácie a suplovania
                 const visibleWalks = dateFilteredWalks.filter(walk => {
                     const personInDb = (walk.person || '').toLowerCase();
                     const subInDb = (walk.substitute || '').toLowerCase();
 
-                    // Skontrolujeme, či niektoré z tvojich menných kľúčov zodpovedá záznamu
                     const isMyOriginal = targetNames.some(name => personInDb.includes(name));
                     const isMySubstitution = targetNames.some(name => subInDb.includes(name));
 
-                    // Ak sa venčenie supluje:
+                    // Ak sa venčenie supluje, vidí ho LEN ten, kto supluje
                     if (walk.status === 'substituted') {
-                        // Zobrazí sa LEN suplujúcemu (pôvodnému venčiarovi sa skryje)
                         return isMySubstitution;
                     }
 
-                    // Ak sa nesupluje, zobrazí sa pôvodnému venčiarovi
+                    // Bežné venčenie vidí pôvodný vlastník
                     return isMyOriginal;
                 });
 
