@@ -64,11 +64,11 @@
         const db = getDatabase(app);
 
         let currentUserEmail = "";
-        let dbIdentities = {}; // Tu si uloženíme pravidlá z databázy
+        let dbIdentities = {};
         const datePicker = document.getElementById('datePicker');
         const todayBtn = document.getElementById('todayBtn');
 
-        // Nastavenie dnešného dátumu
+        // Funkcia, ktorá vždy nastaví kalendár presne na dnešný deň
         function setTodayDate() {
             const today = new Date();
             const yyyy = today.getFullYear();
@@ -76,9 +76,11 @@
             const dd = String(today.getDate()).padStart(2, '0');
             datePicker.value = `${yyyy}-${mm}-${dd}`;
         }
+
+        // Hneď pri načítaní stránky nastavíme dnešok
         setTodayDate();
 
-        // Najskôr načítame pravidlá identifikácie z databázy, až potom sledujeme prihlásenie
+        // Načítanie pravidiel z databázy
         onValue(ref(db, 'identities'), (snapshot) => {
             dbIdentities = snapshot.val() || {};
             if (currentUserEmail) {
@@ -92,6 +94,9 @@
             } else {
                 currentUserEmail = user.email.toLowerCase();
                 document.getElementById('userEmailDisplay').textContent = `E-mail: ${user.email}`;
+                
+                // Po prihlásení pre istotu opäť vynútime dnešný deň
+                setTodayDate();
                 checkAndLoadWalks();
             }
         });
@@ -110,7 +115,7 @@
             }
         });
 
-        // Reakcia na zmenu dátumu v kalendári
+        // Reakcia na manuálnu zmenu dátumu v kalendári
         datePicker.addEventListener('change', () => {
             if (currentUserEmail) {
                 checkAndLoadWalks();
@@ -123,11 +128,9 @@
             });
         });
 
-        // INTELIGENTNÉ PÁROVANIE PODĽA PRAVIDIDIEL Z DATABÁZY (RESP. VÝCHOZÍCH)
         function getTargetNames(email, identities) {
             let names = [];
 
-            // 1. Skúsime nájsť zhodu v pravidlách uložených adminom v databáze
             for (let key in identities) {
                 const rule = identities[key];
                 if (rule.emailMatch && email.includes(rule.emailMatch.toLowerCase())) {
@@ -137,7 +140,6 @@
                 }
             }
 
-            // 2. Ak v databáze nie je pravidlo, použijeme záložné predvolené
             if (names.length === 0) {
                 if (email.includes("jarko") || email.includes("jaroslav")) {
                     names.push("jarko", "jaroslav");
@@ -151,7 +153,6 @@
                 }
             }
 
-            // Vráti unikátne názvy v malých písmenách
             return [...new Set(names.map(n => n.toLowerCase()))];
         }
 
@@ -189,12 +190,10 @@
                     const isMyOriginal = targetNames.some(name => personInDb.includes(name));
                     const isMySubstitution = targetNames.some(name => subInDb.includes(name));
 
-                    // Ak sa venčenie supluje, vidí ho LEN ten, kto supluje
                     if (walk.status === 'substituted') {
                         return isMySubstitution;
                     }
 
-                    // Bežné venčenie vidí pôvodný vlastník
                     return isMyOriginal;
                 });
 
